@@ -2,48 +2,22 @@
 import { RadialBarChart, RadialBar, Legend, ResponsiveContainer } from 'recharts';
 
 const data = [
+    {
+        name: 'Total',
+        count: 106,
+        fill: 'white',
+      },
   {
-    name: '18-24',
-    uv: 31.47,
-    pv: 2400,
-    fill: '#8884d8',
+    name: 'Girls',
+    count: 53,
+    fill: '#f4a261',
   },
   {
-    name: '25-29',
-    uv: 26.69,
-    pv: 4567,
-    fill: '#83a6ed',
+    name: 'Boys',
+    count: 53,
+    fill: '#3a5a40',
   },
-  {
-    name: '30-34',
-    uv: 15.69,
-    pv: 1398,
-    fill: '#8dd1e1',
-  },
-  {
-    name: '35-39',
-    uv: 8.22,
-    pv: 9800,
-    fill: '#82ca9d',
-  },
-  {
-    name: '40-49',
-    uv: 8.63,
-    pv: 3908,
-    fill: '#a4de6c',
-  },
-  {
-    name: '50+',
-    uv: 2.63,
-    pv: 4800,
-    fill: '#d0ed57',
-  },
-  {
-    name: 'unknow',
-    uv: 6.67,
-    pv: 4800,
-    fill: '#ffc658',
-  },
+ 
 ];
 import React from 'react'
 import Image from 'next/image';
@@ -57,29 +31,29 @@ const CountChart = () => {
             <Image src='/moreDark.png' alt='' height={20} width={20} />
         </div>
         {/* chart */}
-        <div className=''>
-        {/* <ResponsiveContainer width="100%" height="100%">
-        <RadialBarChart cx="50%" cy="50%" innerRadius="10%" outerRadius="80%" barSize={10} data={data}>
+        <div className=' relative w-full h-[75%]'>
+        <ResponsiveContainer >
+        <RadialBarChart cx="50%" cy="50%" innerRadius="40%" outerRadius="100%" barSize={32} data={data}>
           <RadialBar
-            minAngle={15}
-            label={{ position: 'insideStart', fill: '#fff' }}
+        //   label={{ position: 'insideStart', fill: '#fff' }}
             background
-            clockWise
-            dataKey="uv"
+            
+            dataKey="count"
           />
-          <Legend iconSize={10} layout="vertical" verticalAlign="middle" wrapperStyle={style} />
+          {/* <Legend iconSize={10} layout="vertical" verticalAlign="middle" /> */}
         </RadialBarChart>
-      </ResponsiveContainer> */}
+      </ResponsiveContainer>
+      <Image src="/maleFemale.png" alt='maleFemale' width={50} height={50} className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'/>
         </div>
         {/* bottom */}
         <div className=' flex justify-center gap-16'>
           <div className='flex flex-col gap-1'>
-            <div className='w-5 h-5 bg-lansSky rounded-full'/>
+            <div className='w-5 h-5 bg-lansGreen rounded-full'/>
             <h1 className='font-bold'>1223</h1>
             <h2 className='text-xs text-gray-500'>Boys (55%)</h2>
           </div>
           <div className='flex flex-col gap-1'>
-            <div className='w-5 h-5 bg-lansYellowLight rounded-full'/>
+            <div className='w-5 h-5 bg-lansYellow rounded-full'/>
             <h1 className='font-bold'>1223</h1>
             <h2 className='text-xs text-gray-500'>Girls (45%)</h2>
           </div>
