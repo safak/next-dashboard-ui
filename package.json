@@ -9,8 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "moment": "^2.30.1",
     "next": "14.2.5",
     "react": "^18",
+    "react-big-calendar": "^1.13.3",
     "react-calendar": "^5.0.0",
     "react-dom": "^18",
     "recharts": "^2.12.7"
@@ -18,6 +20,7 @@
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
+    "@types/react-big-calendar": "^1.8.9",
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
