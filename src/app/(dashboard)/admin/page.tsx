@@ -1,5 +1,7 @@
+import Announcements from '@/components/Announcements'
 import AttendandanceChart from '@/components/AttendandanceChart'
 import CountChart from '@/components/CountChart'
+import EventCalendar from '@/components/EventCalendar'
 import FinaceCharts from '@/components/FinaceCharts'
 import UserCard from '@/components/UserCard'
 import React from 'react'
@@ -33,7 +35,10 @@ const AdminPage = () => {
        </div>
       </div>
       {/* right side */}
-      <div className='w-full lg:w-1/3'>right</div>
+      <div className='w-full lg:w-1/3'>
+        <EventCalendar/>
+        <Announcements/>
+      </div>
 
     </div>
   )

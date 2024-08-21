@@ -17,9 +17,10 @@ const config: Config = {
         lansSky: "#C3EBFA",
         lansSkyLight: "#EDF9FD",
         lansGreen: "#3a5a40",
-        lansGreenLight: "#a3b18a",
+        lansGreenLight: "#e0aaff",
         lansYellow: "#f4a261",
         lansYellowLight: "#f8d7a6",
+        lansBlueLight: "#e9edc9",
        
         
       }

@@ -20,7 +20,7 @@ export default function DashboardLayout({
             width={32}
             height={32}
             />
-            <span className="hidden lg:block">SchoolManagemnt</span>
+            <span className="hidden lg:block font-bold">SchoolManagemnt</span>
           </Link>
          <Menu/>
         </div>
