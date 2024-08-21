@@ -1,4 +1,4 @@
-
+import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
@@ -48,7 +48,7 @@ const EventListPage = () => {
   const renderRow = (item: Event) => (
     <tr
       key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lansSky"
     >
       <td className="flex items-center gap-4 p-4">{item.title}</td>
       <td>{item.class}</td>
@@ -57,14 +57,10 @@ const EventListPage = () => {
       <td className="hidden md:table-cell">{item.endTime}</td>
       <td>
         <div className="flex items-center gap-2">
-        {role === "admin" && (
+          {role === "admin" && (
             <>
-                  <button className="w-8 h-8 flex items-center justify-center rounded-full border bg-lansYellow">
-              <Image src="/delete.png" alt="" width={14} height={14} />
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full border bg-lansGreen">
-              <Image src="/edit.png" alt="" width={14} height={14} />
-            </button>
+              <FormModal table="event" type="update" data={item} />
+              <FormModal table="event" type="delete" id={item.id} />
             </>
           )}
         </div>
@@ -86,9 +82,7 @@ const EventListPage = () => {
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lansYellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === "admin" &&  <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lansYellow">
-              <Image src="/plus.png" alt="" width={14} height={14} />
-            </button>}
+            {role === "admin" && <FormModal table="event" type="create" />}
           </div>
         </div>
       </div>
