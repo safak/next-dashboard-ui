@@ -14,7 +14,7 @@ type Subject = {
 const columns = [
   {
     header: "Subject Name",
-    accessor: "name",
+    accessor: "subject",
   },
   {
     header: "Teachers",
