@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@hookform/resolvers": "^3.9.0",
     "@types/react-big-calendar": "^1.8.9",
     "moment": "^2.30.1",
     "next": "14.2.5",
@@ -16,7 +17,9 @@
     "react-big-calendar": "^1.13.3",
     "react-calendar": "^5.0.0",
     "react-dom": "^18",
-    "recharts": "^2.12.7"
+    "react-hook-form": "^7.53.0",
+    "recharts": "^2.12.7",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20",
