@@ -13,6 +13,14 @@ const config: Config = {
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
+      colors: {
+        tepaSky: "#C3EBFA",
+        tepaSkyBlue: "#EDF9FD",
+        tepaPurple: "#CFCEEF",
+        tepaPurpleLight: "#F1F0FF",
+        tepaYellow: "#FAE27C",
+        tepaYellowLight: "FEFCE8",
+      },
     },
   },
   plugins: [],
