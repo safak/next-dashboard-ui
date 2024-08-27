@@ -92,7 +92,7 @@ const SingleTeacherPage = () => {
       </div>
       {/* BOTTOM */}
       <div className="mt-4 bg-white rounded-md p-4 h-[800px]">
-        <h1>Teacher's Schedule</h1>
+        <h1>Teachers Schedule</h1>
         <BigCalendar />
       </div>
       </div>
@@ -101,11 +101,11 @@ const SingleTeacherPage = () => {
       <div className="bg-white p-4 rounded-md">
         <h1 className="text-xl font-semibold">Shorcuts</h1>
         <div className="mt-4 flex gap-4 flex-wrap text-xs text-gray-500">
-            <Link className="p-3 rounded-md bg-lamaSkyLight" href="">Teacher's Classes</Link>
-            <Link className="p-3 rounded-md bg-lamaPurpleLight" href="">Teacher's Students</Link>
-            <Link className="p-3 rounded-md bg-lamaYellowLight" href="">Teacher's Lessons</Link>
-            <Link className="p-3 rounded-md bg-pink-50" href="">Teacher's Exams</Link>
-            <Link className="p-3 rounded-md bg-lamaSkyLight" href="">Teacher's Assignments</Link>
+            <Link className="p-3 rounded-md bg-lamaSkyLight" href="">Teachers Classes</Link>
+            <Link className="p-3 rounded-md bg-lamaPurpleLight" href="">Teachers Students</Link>
+            <Link className="p-3 rounded-md bg-lamaYellowLight" href="">Teachers Lessons</Link>
+            <Link className="p-3 rounded-md bg-pink-50" href="">Teachers Exams</Link>
+            <Link className="p-3 rounded-md bg-lamaSkyLight" href="">Teachers Assignments</Link>
         </div>
       </div>
       <Performance />
