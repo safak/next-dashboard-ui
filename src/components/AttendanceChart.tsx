@@ -67,7 +67,7 @@ const AttendanceChart = () => {
             }}
           />
           <Legend
-            align="left"
+            align="center"
             verticalAlign="top"
             wrapperStyle={{ paddingTop: 20, paddingBottom: 20 }}
           />

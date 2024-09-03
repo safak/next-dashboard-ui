@@ -23,7 +23,7 @@ export default function RootLayout({
         <Menu />
       </div>
       {/* right */}
-      <div className="w-[86%] md:w-[92%] lg:w-[84%] xl:bg-[84%] bg-[#F7F8FA] overflow-scroll ">
+      <div className="w-[86%] md:w-[92%] lg:w-[84%] xl:bg-[84%] bg-[#F7F8FA] overflow-scroll flex flex-col  ">
         <Navbar />
         {children}
       </div>
