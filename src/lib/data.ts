@@ -1060,3 +1060,18 @@ export const calendarEvents = [
     end: new Date(2024, 7, 16, 14, 45),
   },
 ];
+export const updateTeacherData = (updatedTeacher: any) => {
+  const index = teachersData.findIndex(
+    (teacher) => teacher.id === updatedTeacher.id
+  );
+  if (index !== -1) {
+    teachersData[index] = updatedTeacher;
+  }
+};
+
+export const deleteTeacherData = (teacherId: number) => {
+  const index = teachersData.findIndex((teacher) => teacher.id === teacherId);
+  if (index !== -1) {
+    teachersData.splice(index, 1);
+  }
+};

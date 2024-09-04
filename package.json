@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.1",
     "@radix-ui/react-slot": "^1.1.0",
     "@types/react-big-calendar": "^1.8.10",
     "class-variance-authority": "^0.7.0",
@@ -21,6 +22,7 @@
     "react-calendar": "^5.0.0",
     "react-dom": "^18",
     "recharts": "^2.12.7",
+    "sweetalert2": "^11.13.2",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7"
   },
