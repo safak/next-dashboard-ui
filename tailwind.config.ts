@@ -21,6 +21,8 @@ const config: Config = {
         zeidYellow:"#FAE27C",
         zeidYellowLight:"#FEFCE8",
         zeidBlue:"#302780",
+        zeidBlueLight:"#7e57eb",
+        zeidPink:"#de7ed6",
       }
     },
   },
