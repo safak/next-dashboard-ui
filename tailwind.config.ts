@@ -20,6 +20,7 @@ const config: Config = {
         zeidPurpleLight:"#F1F0FF",
         zeidYellow:"#FAE27C",
         zeidYellowLight:"#FEFCE8",
+        zeidBlue:"#302780",
       }
     },
   },
