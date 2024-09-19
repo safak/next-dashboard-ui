@@ -7,7 +7,9 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }>) {
   return (  
+
       <div className="h-screen flex">
+        
         {/* LEFT */}
         <div className="w-[14%] md:w-[8%] lg:w-[16%] xl:w-[14%] bg-red-200">
           <Link href="/" className="flex items-center justify-center gap-2">
