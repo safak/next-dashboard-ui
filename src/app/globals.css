@@ -41,3 +41,27 @@
     background-color: #7e57eb !important;
     color:white !important;
 }
+
+.rbc-time-view{
+    border-color: #eee !important;
+}
+
+.rbc-time-header {
+    display: none !important;
+}
+
+.rbc-time-content {
+    border: none !important;
+}
+
+.rbc-time-gutter.rbc-time-column {
+    font-size: 12px !important;
+}
+
+.rbc-time-gutter.rbc-time-column .rbc-timeslot-group {
+    padding: 0px 20px !important;
+}
+
+.rbc-timeslot-group {
+    background-color: #f7fdff !important;
+}
