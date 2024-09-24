@@ -16,3 +16,28 @@
     background-color: #302780 !important;
     
 }
+
+.rbc-btn-group:first-child {
+    display: none !important;
+}
+
+.rbc-toolbar-label{
+    text-align: right !important;
+    padding:0px 20px !important ;
+}
+
+.rbc-btn-group:last-child {
+    font-size: 13px !important;
+}
+
+.rbc-btn-group:last-child button {
+    border: none !important;
+    background-color: #f1f0ff !important;
+    margin-left: 2px !important;
+}
+
+.rbc-toolbar button.rbc-active  {
+    box-shadow: none !important;
+    background-color: #7e57eb !important;
+    color:white !important;
+}
