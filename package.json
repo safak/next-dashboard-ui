@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@prisma/client": "^5.19.1",
+    "@prisma/client": "^5.20.0",
     "moment": "^2.30.1",
     "next": "14.2.5",
     "prisma": "^5.19.1",
@@ -19,6 +19,7 @@
     "react-dom": "^18",
     "react-hook-form": "^7.52.2",
     "recharts": "^2.12.7",
+    "ts-node": "^10.9.2",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -32,5 +33,8 @@
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
+  },
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   }
 }
