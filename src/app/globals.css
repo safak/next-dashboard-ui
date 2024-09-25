@@ -65,3 +65,37 @@
 .rbc-timeslot-group {
     background-color: #f7fdff !important;
 }
+
+.rbc-day-slot {
+    font-size: 14px !important;
+}
+
+.rbc-event {
+    border: none !important;
+    color:black !important;
+    width: 100% !important;
+    padding: 10px !important;
+    
+}
+
+.rbc-event:nth-child(1) {
+    background-color: #e2f8ff !important;
+}
+
+.rbc-event:nth-child(2) {
+    background-color: #fefce8 !important;
+}
+.rbc-event:nth-child(3) {
+    background-color: red !important;
+}
+.rbc-event:nth-child(4) {
+    background-color: red !important;
+}
+.rbc-event:nth-child(5) {
+    background-color: red !important;
+}
+
+.rbc-event-label{
+    color: gray;
+    margin-bottom: 5px;
+}

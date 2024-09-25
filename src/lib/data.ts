@@ -1069,13 +1069,13 @@ export const calendarEvents = [
   {
     title: "HMD-Juniors",
     allDay: false,
-    start: new Date(2024, 8, 24, 19, 0),
-    end: new Date(2024, 8, 24, 20, 0),
+    start: new Date(2024, 8, 25, 19, 0),
+    end: new Date(2024, 8, 25, 20, 0),
   },
   {
     title: "HMD-BlackBelts",
     allDay: false,
-    start: new Date(2024, 8, 27, 20, 0),
-    end: new Date(2024, 8, 27, 21, 0),
+    start: new Date(2024, 8, 25, 20, 0),
+    end: new Date(2024, 8, 25, 21, 0),
   },
 ];
