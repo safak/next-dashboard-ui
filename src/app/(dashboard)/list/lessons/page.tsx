@@ -2,9 +2,9 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { lessonsData, role } from "@/lib/data";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
+import { role } from "@/lib/utils";
 import { Class, Lesson, Prisma, Subject, Teacher } from "@prisma/client";
 import Image from "next/image";
 
@@ -24,10 +24,12 @@ const columns = [
     accessor: "teacher",
     className: "hidden md:table-cell",
   },
-  {
+  ...(role==="admin" ? 
+  [
+    {
     header: "Actions",
     accessor: "action",
-  },
+  }] : [])
 ];
 const renderRow = (item: LessonList) => (
     <tr
@@ -76,8 +78,6 @@ const LessonListPage =  async ({
         {subject:{name: {contains: value, mode: 'insensitive'}}},
         {teacher:{name: {contains: value, mode: 'insensitive'}}},
        ]
-        
-      
         break;
         default:
           break
@@ -120,7 +120,7 @@ prisma.lesson.findMany({
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lansYellow">
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
-            {role === "admin" && <FormModal table="lesson" type="create" />}
+            {role === "admin" && <FormModal table="parent" type="create" />}
           </div>
         </div>
       </div>

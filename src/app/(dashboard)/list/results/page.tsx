@@ -2,12 +2,10 @@ import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import {
-  resultsData,
-  role,
-} from "@/lib/data";
+
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/setting";
+import { currentUserId, role } from "@/lib/utils";
 import { Prisma } from "@prisma/client";
 import Image from "next/image";
 
@@ -52,10 +50,11 @@ const columns = [
     accessor: "date",
     className: "hidden md:table-cell",
   },
-  {
+  ...(role==="admin" || role ==="teacher"? [
+    {
     header: "Actions",
     accessor: "action",
-  },
+  }] : [])
 ];
  const renderRow = (item: ResultList) => (
     <tr
@@ -70,7 +69,7 @@ const columns = [
       <td className="hidden md:table-cell"> {new Intl.DateTimeFormat('en-US').format(item.startTime)}</td>
       <td>
         <div className="flex items-center gap-2">
-          {role === "admin" || role === "teacher" && (
+          {(role === "admin" || role === "teacher") && (
             <>
               <FormModal table="result" type="update" data={item} />
               <FormModal table="result" type="delete" id={item.id} />
@@ -114,6 +113,31 @@ const ResultListPage = async ({
     }
     }
   
+
+    // role conditions
+    switch (role) {
+      case "admin":
+        break;
+      case "teacher":
+        query.OR=[{
+          exam:{lesson:{teacherId:currentUserId!}},
+          assignment:{lesson:{teacherId:currentUserId!}},
+
+        }]
+          break;
+
+          case "student":
+    query.studentId=currentUserId!
+  
+        break;
+        
+          case "parent":
+            query.student={
+          parentId:currentUserId!
+            }
+      default:
+        break;
+    }
   const [dataResp,count] =await prisma.$transaction([
 
 prisma.result.findMany({
