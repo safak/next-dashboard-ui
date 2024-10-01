@@ -1,57 +1,14 @@
 "use client"
 import { BarChart, Bar, Rectangle, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const data = [
-  {
-    name: 'Mon',
-    present: 54,
-    absent: 23,
-    
-  },
-  {
-    name: 'Tue',
-    present: 32,
-    absent: 78,
 
-  },
-  {
-    name: 'Web',
-    present: 133,
-    absent: 4,
-   
-  },
-  {
-    name: 'Thu',
-    present: 56,
-    absent: 23,
-   
-  },
-  {
-    name: 'Fri',
-    present: 32,
-    absent: 23,
-    
-  },
-  {
-    name: 'Sat',
-    present: 45,
-    absent: 25,
-    
-  },
-  {
-    name: 'Sun',
-    present: 45,
-    absent: 25,
-    
-  },
-];
 import React from 'react'
 import Image from 'next/image';
 
 const AttendandanceChart = ({
-  data1,
+  data,
 }:{
-  data1:{name: string; present: number; absent: number}[]
+  data:{name: string; present: number; absent: number}[]
 }) => {
   return (
    
