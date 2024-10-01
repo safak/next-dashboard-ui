@@ -48,13 +48,13 @@ const data = [
 import React from 'react'
 import Image from 'next/image';
 
-const AttendandanceChart = () => {
+const AttendandanceChart = ({
+  data1,
+}:{
+  data1:{name: string; present: number; absent: number}[]
+}) => {
   return (
-    <div className='bg-white rounded-lg p-4 h-full'>
-        <div className='flex justify-between items-center'>
-            <h1 className='text-lg font-semibold'>Attendance</h1>
-            <Image src="/moreDark.png" width={20} height={20} alt='image'/>
-        </div>
+   
 <ResponsiveContainer width="90%" height="100%">
         <BarChart
           width={500}
@@ -82,7 +82,7 @@ const AttendandanceChart = () => {
           />
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    
   )
 }
 
