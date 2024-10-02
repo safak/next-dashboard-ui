@@ -13,6 +13,17 @@ const config: Config = {
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
+      colors:{
+        lansSky: "#C3EBFA",
+        lansSkyLight: "#EDF9FD",
+        lansGreen: "#3a5a40",
+        lansGreenLight: "#e0aaff",
+        lansYellow: "#f4a261",
+        lansYellowLight: "#f8d7a6",
+        lansBlueLight: "#e9edc9",
+       
+        
+      }
     },
   },
   plugins: [],
