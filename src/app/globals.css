@@ -67,14 +67,15 @@
 }
 
 .rbc-day-slot {
-    font-size: 14px !important;
+    font-size: 12px !important;
 }
 
 .rbc-event {
     border: none !important;
     color:black !important;
-    width: 100% !important;
-    padding: 10px !important;
+    width: 99% !important;
+    padding: 8px !important;
+    
     
 }
 
