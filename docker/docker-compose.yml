@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+db:
+    image: postgres
+    environment:
+        POSTGRES_USER: admin
+        POSTGRES_PASSWORD: admin
+        POSTGRES_DB: iddtvdb
+    volumes:
+        - /Users/punwiphatnontachai/Documents/workspace/postgres-data:/var/lib/postgressql/data
+    ports:
+        - "5432:5432"
+pgadmin:
+    image: dpage/pgadmin4
+    environment:
+        PGADMIN_DEFAULT_EMAIL: ideadotdev@gmail.com
+        PGADMIN_DEFAULT_PASSWORD: ideadotdev
+    ports:
+        - "8080:80"
+    depends_on:
+        - db
