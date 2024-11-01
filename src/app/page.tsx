@@ -1,6 +1,6 @@
 const Homepage = () => {
   return (
-    <div className=''> this isHomepage</div>
+    <div className=''> this is Homepage lets start</div>
   )
 }
 
