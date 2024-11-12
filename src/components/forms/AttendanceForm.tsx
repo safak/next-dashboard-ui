@@ -4,8 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import InputFiels from "../InputFiels";
 import Image from "next/image";
+import InputField from "../InputField";
 
 const schema = z.object({
   username: z
@@ -53,14 +53,14 @@ const AttendanceForm = ({
         Authentication Information
       </span>
       <div className="flex justify-between flex-wrap gap-4">
-        <InputFiels
+        <InputField
           label="Username"
           name="username"
           defaultValue={data?.username}
           register={register}
           error={errors.username}
         />
-        <InputFiels
+        <InputField
           label="Email"
           name="email"
           type="email"
@@ -68,7 +68,7 @@ const AttendanceForm = ({
           register={register}
           error={errors.username}
         />
-        <InputFiels
+        <InputField
           label="Password"
           name="password"
           type="password"
@@ -81,14 +81,14 @@ const AttendanceForm = ({
         Personal Information
       </span>
       <div className="flex justify-between flex-wrap gap-4">
-        <InputFiels
+        <InputField
           label="First Name"
           name="firstName"
           defaultValue={data?.firstName}
           register={register}
           error={errors.firstName}
         />
-        <InputFiels
+        <InputField
           label="Last Name"
           name="lastName"
           defaultValue={data?.lastName}
@@ -96,7 +96,7 @@ const AttendanceForm = ({
           error={errors.lastName}
         />
 
-        <InputFiels
+        <InputField
           label="Phone"
           name="phone"
           defaultValue={data?.phone}
@@ -104,7 +104,7 @@ const AttendanceForm = ({
           error={errors.phone}
         />
 
-        <InputFiels
+        <InputField
           label="Address"
           name="address"
           defaultValue={data?.address}
@@ -112,7 +112,7 @@ const AttendanceForm = ({
           error={errors.address}
         />
 
-        <InputFiels
+        <InputField
           label="Blood Type"
           name="bloodType"
           defaultValue={data?.bloodType}
@@ -120,7 +120,7 @@ const AttendanceForm = ({
           error={errors.bloodType}
         />
 
-        <InputFiels
+        <InputField
           label="Birthday"
           name="birthday"
           type="date"
