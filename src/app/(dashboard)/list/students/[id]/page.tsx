@@ -1,10 +1,11 @@
+            
 import Announcements from "@/components/Announcements"
 import BigCalendar from "@/components/BigCalendar"
 import Performance from "@/components/Performance"
 import Image from "next/image"
 import Link from "next/link"
 
-const SingleTeacherPage = () => {
+const SingleStudentPage = () => {
   return (
     <div className='flex flex-1 p-4 flex-col gap-4 xl:flex-row'>
         {/* LEFT */}
@@ -128,4 +129,4 @@ const SingleTeacherPage = () => {
   )
 }
 
-export default SingleTeacherPage
+export default SingleStudentPage
