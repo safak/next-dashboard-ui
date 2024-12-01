@@ -15,7 +15,7 @@ const SingleStudentPage = () => {
             {/* Info Card */}
             <div className='bg-zeidSky py-6 px-4 rounded-md flex-1 flex gap-4'>
               <div className='w-1/3'>
-                <Image src='https://images.pexels.com/photos/41162/moon-landing-apollo-11-nasa-buzz-aldrin-41162.jpeg'
+                <Image src='https://images.pexels.com/photos/2787341/pexels-photo-2787341.jpeg'
                 alt="" 
                 width={144} 
                 height={144} 
@@ -23,7 +23,7 @@ const SingleStudentPage = () => {
                 />
               </div>
               <div className='w-2/3 flex flex-col justify-between gap-4'>
-                <h1 className="text-xl font-semibold">George Antzoulis</h1>
+                <h1 className="text-xl font-semibold">Evelyn</h1>
                 <p className="text-sm text-gray-500">
                   Lorem ipsum dolor sit amet consectetur, adipisicing elit.
                 </p>
@@ -38,7 +38,7 @@ const SingleStudentPage = () => {
                   </div>
                   <div className='w-full md:w-1/3 flex items-center gap-2'>
                     <Image src='/mail.png' alt="" width={14} height={14}/>
-                    <span>gantzoulis@hotmail.com</span>
+                    <span>evelina@hotmail.com</span>
                   </div>
                   <div className='w-full md:w-1/3 flex items-center gap-2'>
                     <Image src='/phone.png' alt="" width={14} height={14}/>
@@ -58,8 +58,8 @@ const SingleStudentPage = () => {
                   width={24} 
                   className="w-6 h-6"/>
                 <div className=''>
-                  <h1 className="text-xl font-semibold">2</h1>
-                  <span className="text-sm text-gray-400">Branches</span>
+                  <h1 className="text-xl font-semibold">Black 4th Dan</h1>
+                  <span className="text-sm text-gray-400">Belt</span>
                 </div>
               </div>
               {/* CARD */}
@@ -71,7 +71,7 @@ const SingleStudentPage = () => {
                   width={24} 
                   className="w-6 h-6"/>
                 <div className=''>
-                  <h1 className="text-xl font-semibold">6</h1>
+                  <h1 className="text-xl font-semibold">20</h1>
                   <span className="text-sm text-gray-400">Lesson</span>
                 </div>
               </div>
@@ -105,7 +105,7 @@ const SingleStudentPage = () => {
           </div>
           {/* BOTTOM */}
             <div className='mt-4 bg-white rounded-md p-4 h-[800]'>
-              <h1>Instructors Schedule</h1>
+              <h1>Student Schedule</h1>
               <BigCalendar/>
             </div>
         </div>
@@ -114,10 +114,10 @@ const SingleStudentPage = () => {
           <div className='bg-white p-4 rounded-md'>
             <h1 className="text-xl font-semibold">Shortcuts</h1>
             <div className="mt-4 flex gap-4 flex-wrap text-xs text-gray-500">
-              <Link href="/" className="p-3 rounded-md bg-zeidSkyLight">Classes</Link>
-              <Link href="/" className="p-3 rounded-md bg-zeidPurpleLight">Students</Link>
+              <Link href="/" className="p-3 rounded-md bg-zeidSkyLight">Lessons</Link>
+              <Link href="/" className="p-3 rounded-md bg-zeidPurpleLight">Teachers</Link>
               <Link href="/" className="p-3 rounded-md bg-zeidYellow">Exams</Link>
-              <Link href="/" className="p-3 rounded-md bg-blue-400">Lessons</Link>
+              <Link href="/" className="p-3 rounded-md bg-blue-400">Results</Link>
               <Link href="/" className="p-3 rounded-md bg-zeidYellowLight">Assignments</Link>
               <Link href="/" className="p-3 rounded-md bg-red-400">Events</Link>
             </div>    
