@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import TeacherForm from "./forms/TeacherForm";
 
 const FormModal = ({table, type, data, id}:{
     table:
@@ -40,7 +41,7 @@ const FormModal = ({table, type, data, id}:{
             ) 
             : 
             (
-                "Create or Update form"
+                <TeacherForm type="create"/>
             )
         );
     };
