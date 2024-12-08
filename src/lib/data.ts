@@ -921,8 +921,8 @@ export const calendarEvents = [
   {
     title: "Math",
     allDay: false,
-    start: new Date(2024, 7, 12, 8, 0),
-    end: new Date(2024, 7, 12, 8, 45),
+    start: new Date(2024, 9, 9, 8, 0),
+    end: new Date(2024, 9, 9, 8, 45),
   },
   {
     title: "English",
@@ -1051,13 +1051,31 @@ export const calendarEvents = [
   {
     title: "Chemistry",
     allDay: false,
-    start: new Date(2024, 7, 16, 13, 0),
-    end: new Date(2024, 7, 16, 13, 45),
+    start: new Date(2024, 8, 16, 18, 0),
+    end: new Date(2024, 8, 16, 19, 0),
   },
   {
     title: "History",
     allDay: false,
-    start: new Date(2024, 7, 16, 14, 0),
-    end: new Date(2024, 7, 16, 14, 45),
+    start: new Date(2024, 8, 16, 19, 0),
+    end: new Date(2024, 8, 16, 20, 0),
+  },
+  {
+    title: "HMD-Juniors",
+    allDay: false,
+    start: new Date(2024, 8, 23, 19, 0),
+    end: new Date(2024, 8, 23, 20, 0),
+  },
+  {
+    title: "HMD-Juniors",
+    allDay: false,
+    start: new Date(2024, 9, 2, 19, 0),
+    end: new Date(2024, 9, 2, 19, 30),
+  },
+  {
+    title: "HMD-BlackBelts",
+    allDay: false,
+    start: new Date(2024, 9, 2, 20, 30),
+    end: new Date(2024, 9, 2, 21, 0),
   },
 ];
