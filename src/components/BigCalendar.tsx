@@ -17,7 +17,8 @@ const BigCalendar = () => {
 
 
   return(
-    <Calendar
+    <>
+      <Calendar
       localizer={localizer}
       events={calendarEvents}
       startAccessor="start"
@@ -28,7 +29,8 @@ const BigCalendar = () => {
       style={{ height: "98%" }}
       min={new Date(2025, 1,0,16,0,0)}
       max={new Date(2025, 1,0,23,0,0)}
-    />
+      />
+    </>
   );
 }
 

@@ -114,7 +114,7 @@ const SingleTeacherPage = () => {
                 <span className="text-sm text-gray-400">Lessons</span>
               </div>
             </div>
-            {/* CARD  */}
+            {/* CARD */}
             <div className="bg-white p-4 rounded-md flex gap-4 w-full md:w-[48%] xl:w-[45%] 2xl:w-[48%]">
               <Image
                 src="/singleClass.png"
@@ -130,15 +130,13 @@ const SingleTeacherPage = () => {
             </div>
           </div>
         </div>
-        {/* BOTTOM*/}
+        {/* BOTTOM */}
         <div className="mt-4 bg-white rounded-md p-4 h-[800px]">
-          <h1>Teacher Schedule</h1>
+          <h1>Teacher&apos;s Schedule</h1>
           <BigCalendar />
         </div>
-         
       </div>
       {/* RIGHT */}
-      {/*
       <div className="w-full xl:w-1/3 flex flex-col gap-4">
         <div className="bg-white p-4 rounded-md">
           <h1 className="text-xl font-semibold">Shortcuts</h1>
@@ -163,7 +161,6 @@ const SingleTeacherPage = () => {
         <Performance />
         <Announcements />
       </div>
-      */}
     </div>
   );
 };
