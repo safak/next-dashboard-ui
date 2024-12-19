@@ -45,8 +45,8 @@ export default class AttendanceChart extends PureComponent {
   render() {
     return (
       <div className="bg-white rounded-lg p-4 h-full">
-        <div>
-          <h1>Attendance</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-lg font-semibold attendance">Attendance</h1>
           <Image src="/moreDark.png" alt="" width={20} height={20} />
         </div>
         <ResponsiveContainer width="100%" height="90%">
