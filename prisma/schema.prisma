@@ -13,22 +13,73 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+enum MemberSex{
+  MALE
+  FEMALE
+}
 model Admin {
   id String @id
   username String @unique
+  email String @unique
 }
 
-model Member {}
+model Member {
+  id String @id
+  username String @unique
+  name String
+  surname String
+  email String? @unique
+  phone String?
+  address String?
+  img String?
+  bloodType String?
+  sex MemberSex
+  createdAd DateTime @default(now())
+  parentId String
+  Parent Parent @relation(fields: [parentId], references: [id])
+}
 
-model Teacher {}
+model Parent {
+  id String @id
+  username String @unique
+  name String
+  surname String
+  email String? @unique
+  phone String?
+  address String?
+  createdAd DateTime @default(now())
+  Children Member[]  
+}
+ model Teacher{
+  id String @id
+  username String @unique
+  name String
+  surname String
+  email String? @unique
+  phone String?
+  address String?
+  img String?
+  bloodType String?
+  sex MemberSex
+  Lesson Lesson @relation(fields:[])
+  createdAd DateTime @default(now())
+ }
 
-model Parent {}
+
+  model Lesson{
+    id Int @id @default(autoincrement())
+    lessonName String @unique
+    teachers Teacher[]
+
+  }
+/*
 
 model Attendance {}
 
 model Class{}
 
-model Lesson{}
+
 
 model Belts{}
 
@@ -38,4 +89,4 @@ model Results{}
 
 model Announcements{}
 
-model Events{}
+model Events{} */
