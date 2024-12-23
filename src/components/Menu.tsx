@@ -14,7 +14,7 @@ const menuItems = [
       {
         icon: "/team-development.png",
         label: "Career Paths",
-        href: "/career-paths",
+        href: "/dashboard/student/careerpaths",
         visible: ["student"],
       },
       {
