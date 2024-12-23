@@ -1,6 +1,28 @@
+import Image from "next/image";
+
 const Navbar = () => {
   return (
-    <div className=''>Navbar</div>
+    <div className="flex items-center justify-between p-4 bg-white shadow-md">
+      {/* User Info & Profile Picture */}
+      <div className="flex items-center ml-auto space-x-4">
+        {/* User Info */}
+        <div className="flex flex-col text-right">
+          <span className="text-sm leading-3 font-medium">John Doe</span>
+          <span className="text-xs text-gray-500">Scholar</span>
+        </div>
+        
+        {/* Profile Picture */}
+        <div className="relative">
+          <Image
+            src="/profile.png" // Path to the avatar image, ensure it's in the public directory
+            alt="Profile Picture"
+            width={36}
+            height={36}
+            className="rounded-full border border-gray-300" // Border for the image
+          />
+        </div>
+      </div>
+    </div>
   );
 };
 
