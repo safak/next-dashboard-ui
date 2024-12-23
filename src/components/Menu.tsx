@@ -20,7 +20,7 @@ const menuItems = [
       {
         icon: "/attendance.png",
         label: "Chatbot",
-        href: "/list/students",
+        href: "/chat",
         visible: ["student"],
       },
       {
