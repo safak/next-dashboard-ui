@@ -14,11 +14,11 @@ const Navbar = () => {
         {/* Profile Picture */}
         <div className="relative">
           <Image
-            src="/profile.png" // Path to the avatar image, ensure it's in the public directory
+            src="/profile.png" 
             alt="Profile Picture"
             width={36}
             height={36}
-            className="rounded-full border border-gray-300" // Border for the image
+            className="rounded-full border border-gray-300" 
           />
         </div>
       </div>
