@@ -1,4 +1,4 @@
-import SearchBar from "../../components/SearchBar";
+import SearchBar from "../../../../components/SearchBar";
 import Image from "next/image";
 import Robot from "/public/robot-chatbot.png";
 
