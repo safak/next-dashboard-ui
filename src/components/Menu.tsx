@@ -18,9 +18,9 @@ const menuItems = [
         visible: ["student"],
       },
       {
-        icon: "/bot .png",
+        icon: "/bot.png",
         label: "Chatbot",
-        href: "/chat",
+        href: "/dashboard/student/chat",
         visible: ["student"],
       },
       {
