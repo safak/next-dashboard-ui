@@ -12,11 +12,11 @@ const DashboardPage = () => {
         </header>
 
         {/* Main Dashboard Widgets */}
-        <div className="flex justify-center items-start"> {/* Center the grid */}
+        <div className="flex justify-center items-start " > {/* Center the grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Motivational Section */}
-            <div className="bg-white p-4 rounded shadow col-span-1 md:col-span-2 lg:col-span-3">
-              <div className="w-full h-64 flex items-center justify-center overflow-hidden">
+            <div className="bg-white p-4 rounded shadow col-span-1 md:col-span-2 lg:col-span-3 transform transition-transform duration-500 hover:scale-105">
+              <div className="w-full h-64 flex items-center justify-center overflow-hidden transform transition-transform duration-500 hover:scale-105">
                 <img
                   src="/collegegrad.jpg" // Corrected path
                   alt="Motivational"
@@ -29,7 +29,7 @@ const DashboardPage = () => {
             </div>
 
             {/* Quick Links */}
-            <div className="bg-white p-4 rounded shadow">
+            <div className="bg-white p-4 rounded shadow transform transition-transform duration-500 hover:scale-105">
               <h3 className="text-lg font-bold">Quick Actions</h3>
               <div className="mt-2 flex flex-col space-y-2">
                 <button className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Submit Resume</button>
@@ -39,14 +39,14 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            <div className="bg-gray-200 p-6 rounded shadow mt-6">
+            <div className="bg-gray-200 p-6 rounded shadow mt-6 transform transition-transform duration-500 hover:scale-105">
               <h3 className="text-lg font-bold">Feature Coming Soon!</h3>
                 <p className="text-gray-600">We're working on adding exciting new features to help you succeed. Stay tuned!</p>
             </div>
 
 
             {/* Resources Highlights */}
-            <div className="bg-white p-4 rounded shadow">
+            <div className="bg-white p-4 rounded shadow transform transition-transform duration-500 hover:scale-105">
               <h3 className="text-lg font-bold">Featured Resources</h3>
               <ul className="mt-2 space-y-2">
                 <li>
