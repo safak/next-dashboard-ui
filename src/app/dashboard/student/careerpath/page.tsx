@@ -15,7 +15,7 @@ const Page = () => {
                 <img
                   src="/collegegrad.jpg" 
                   alt="Motivational"
-                  className="object-contain w-full h-full" 
+                  className="object-contain w-80 h-full" 
                 />
                 <label>Learn More:</label>
                 <a href="https://www.coursera.org/articles/what-is-computer-science"
