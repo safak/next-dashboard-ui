@@ -1,11 +1,12 @@
 'use client'
 import SendIcon from '@mui/icons-material/Send';
 
-export default function SearchBar() {
+export default function SearchBar({handleSend, value, setValue}, props) {
 
-    const handleSend = () => {
-
+    const onChange = (e) => {
+        setValue(e.target.value);
     }
+
     return (
         <div
             className="w-1/2 rounded-md"
@@ -17,6 +18,14 @@ export default function SearchBar() {
                     className="rounded-l-full rounded-r-full w-full bg-black/20 placeholder-black/50 pl-6 p-4 text-xl focus:outline-none"
                     type="text"
                     placeholder="Ask anything..."
+                    onChange={(e) => {props.onChange ? props.onChange(e) : onChange(e)}}
+                    value={value}
+                    onKeyDown={(e) => {
+                        if (e.code === 'Enter') {
+                            handleSend();
+                            setValue('');
+                        }
+                    }}
                 />
 
                 <button
