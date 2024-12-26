@@ -17,7 +17,9 @@
     "openai": "^4.77.0",
     "react": "^18",
     "react-dom": "^18",
-    "react-loading": "^2.0.3"
+    "react-loading": "^2.0.3",
+    "react-webcam": "^7.2.0",
+    "wav-blob-util": "^1.0.21"
   },
   "devDependencies": {
     "@types/node": "^20",

@@ -26,7 +26,7 @@ const menuItems = [
       {
         icon: "/interviewers.png",
         label: "Mock Interview",
-        href: "/mock-interview",
+        href: "/dashboard/student/mockinterview",
         visible: ["student"],
       },
       {
