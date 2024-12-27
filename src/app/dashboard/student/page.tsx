@@ -7,7 +7,7 @@ const DashboardPage = () => {
       <main className="flex-1 bg-gray-100 p-6">
         {/* Header Section */}
         <header className="mb-6 text-center">
-          <h2 className="text-3xl font-bold">Welcome, [User's Name]!</h2>
+          <h2 className="text-3xl font-bold">Welcome Scholar!</h2>
           <p className="text-gray-600">Start your journey towards your dream career today.</p>
         </header>
 

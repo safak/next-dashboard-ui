@@ -1,5 +1,8 @@
+"use client";
 import Link from "next/link";
 import Image from "next/image";
+import { signOut } from "firebase/auth";
+import { auth } from "@/app/firebase/firebaseConfig";
 
 const menuItems = [
   {
@@ -63,6 +66,15 @@ const menuItems = [
 ];
 
 const Menu = ({ userType }: { userType: string }) => {
+  const handleLogout = async () => {
+    try {
+      await signOut(auth); // Logs the user out
+      window.location.href = "/auth/login"; // Redirects to login page
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
   return (
     <div className="mt-4 text-sm">
       {menuItems.map((section) => (
@@ -72,18 +84,31 @@ const Menu = ({ userType }: { userType: string }) => {
           <div className="menu-items">
             {section.items
               .filter((item) => item.visible.includes(userType.toLowerCase()))
-              .map((item) => (
-                <Link
-                  href={item.href}
-                  key={item.label}
-                  className="flex items-center justify-start gap-4 text-white font-bold py-2 hover:text-blue-500"
-                >
-                  <div className="menu-item">
-                    <Image src={item.icon} alt={item.label} width={20} height={20} />
-                    <span className="hidden lg:block">{item.label}</span> {/* Show label on larger screens */}
+              .map((item) =>
+                item.label === "Logout" ? (
+                  <div
+                    key={item.label}
+                    onClick={handleLogout}
+                    className="flex items-center justify-start gap-4 text-white font-bold py-2 hover:text-blue-500 cursor-pointer"
+                  >
+                    <div className="menu-item">
+                      <Image src={item.icon} alt={item.label} width={20} height={20} />
+                      <span className="hidden lg:block">{item.label}</span>
+                    </div>
                   </div>
-                </Link>
-              ))}
+                ) : (
+                  <Link
+                    href={item.href}
+                    key={item.label}
+                    className="flex items-center justify-start gap-4 text-white font-bold py-2 hover:text-blue-500"
+                  >
+                    <div className="menu-item">
+                      <Image src={item.icon} alt={item.label} width={20} height={20} />
+                      <span className="hidden lg:block">{item.label}</span>
+                    </div>
+                  </Link>
+                )
+              )}
           </div>
         </div>
       ))}
