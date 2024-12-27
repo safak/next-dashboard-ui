@@ -15,9 +15,10 @@ const Login = () => {
     e.preventDefault(); // Stop form from refreshing the page
 
     try {
-      await signInWithEmailAndPassword(email, password); // Sign in using Firebase
+      const res = await signInWithEmailAndPassword(email, password); // Sign in using Firebase
       setEmail(""); // Clear email state
       setPassword(""); // Clear password state
+      if (!res) return;
       router.push("/dashboard/student");
     } catch (err) {
       console.error(err); 

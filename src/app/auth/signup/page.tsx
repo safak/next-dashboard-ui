@@ -2,21 +2,25 @@
 import { useState } from "react";
 import {useCreateUserWithEmailAndPassword} from 'react-firebase-hooks/auth'
 import {auth} from '@/app/firebase/firebaseConfig'
+import {useRouter} from "next/navigation";
 
 
 const Signup = () => {
   const [email, setEmail] = useState(""); // State for email input
   const [password, setPassword] = useState(""); // State for password input
+  const router = useRouter();
   
   const [createUserWithEmailAndPassword] = useCreateUserWithEmailAndPassword(auth);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      const res = await createUserWithEmailAndPassword(email, password)
-      console.log({res})
+      const res = await createUserWithEmailAndPassword(email, password);
       setEmail('');
       setPassword('');
+      if (!res) return;
+      router.push("/dashboard/student");
     }
     catch(e){
       console.error(e);
