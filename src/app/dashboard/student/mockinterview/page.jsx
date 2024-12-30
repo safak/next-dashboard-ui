@@ -15,6 +15,21 @@ export default function MockInterviewPage() {
     const [feedbackType, setFeedbackType] = useState("");
     const [error, setError] = useState(false);
 
+    const [countdown, setCountdown] = useState(3);
+    const [showOverlay, setShowOverlay] = useState(true);
+
+    useEffect(() => {
+        if (showOverlay && countdown > 0) {
+            const timer = setInterval(() => {
+                setCountdown((prevCountdown) => prevCountdown - 1);
+            }, 1000);
+
+            return () => clearInterval(timer); // Cleanup interval on unmount
+        } else if (countdown === 0) {
+            setShowOverlay(false); // Hide the overlay when countdown ends
+        }
+    }, [countdown, showOverlay]);
+
     // request microphone permissions
     useEffect(() => {
         const getMicPerm = async () => {
@@ -205,10 +220,10 @@ export default function MockInterviewPage() {
     const toggleRecording = async (isRecording) => {
         if (isRecording) {
             toggleCam(isRecording);
-            await startRecording();
+            // await startRecording();
         } else {
             toggleCam(isRecording);
-            stopRecording();
+            // stopRecording();
         }
     }
 
@@ -318,11 +333,21 @@ export default function MockInterviewPage() {
                                                 color="black"
                                             />
                                         ) : (
-                                            <Webcam
-                                                audio={false}
-                                                mirrored={true}
-                                                height={500}
-                                            />
+                                            <div
+                                                className="w-full h-full relative"
+                                            >
+                                                <Webcam
+                                                    audio={false}
+                                                    mirrored={true}
+                                                    height={500}
+                                                />
+
+                                                showOverlay && (
+                                                    <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center text-white text-6xl z-10">
+                                                        {countdown}
+                                                    </div>
+                                                )
+                                            </div>
                                         )
                                     )
                                 }
@@ -337,7 +362,7 @@ export default function MockInterviewPage() {
                                     }
                                 }}
                             >
-                                {isCamOn ? "Stop Recording" : "Start Recording"}
+                                {isCamOn ? "Stop" : "Start"}
                             </button>
                         </div>
 
