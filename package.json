@@ -9,8 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/react-big-calendar": "^1.16.0",
+    "moment": "^2.30.1",
     "next": "14.2.5",
     "react": "^18",
+    "react-big-calendar": "^1.17.1",
     "react-calendar": "^5.1.0",
     "react-dom": "^18",
     "recharts": "^2.15.0"
