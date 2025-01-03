@@ -7,7 +7,7 @@ import MessageBox from "/src/components/MessageBox";
 import ReactLoading from 'react-loading';
 
 export default function ChatPage() {
-    const [messages, setMessages] = useState([]);
+    const [messages, setMessages] = useState(["Hello! I’m AspireAI! Ask me any questions regarding colleges, careers, or feelings. You name it! I can probably help you out!"]);
     const [currMessage, setCurrMessage] = useState("");
     const [loading, setLoading] = useState(false);
 

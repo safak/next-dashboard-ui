@@ -15,7 +15,7 @@ export default function MessageBox({ messages }) {
             <div
                 key={`msg-${index}`}
                 className={`p-2 my-2 w-fit max-w-xs ${
-                    isLeftAligned ? "text-right self-end bg-blue-200" : "text-left self-start bg-gray-200"
+                    isLeftAligned ? "text-left self-start bg-gray-200" : "text-right self-end bg-blue-200"
                 } rounded-lg`}
             >
                 {msg}
