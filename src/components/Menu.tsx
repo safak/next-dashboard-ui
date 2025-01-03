@@ -52,7 +52,7 @@ const menuItems = [
       {
         icon: "/gear.png",
         label: "Settings",
-        href: "/settings",
+        href: "/dashboard/student/settings",
         visible: ["student"],
       },
       {
