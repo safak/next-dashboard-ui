@@ -29,14 +29,14 @@ export default function MockInterviewPage() {
             setShowOverlay(false); // Hide the overlay when countdown ends
         }
     }, [countdown, showOverlay]);
-
+    
     // request microphone permissions
     useEffect(() => {
         const getMicPerm = async () => {
+            console.log('getting mic perm')
             if (navigator.permissions) {
                 try {
-                    const mic = await navigator.permissions.query({ name: "microphone" });
-                    if (mic.state === "granted") return;
+                    // const mic = await navigator.permissions.query({ name: "microphone" });
                     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                         navigator.mediaDevices.getUserMedia({ audio: true })
                             .then(stream => {
@@ -60,10 +60,15 @@ export default function MockInterviewPage() {
     //request webcam permissions
     useEffect( () => {
         const getWebcamPerm = async () => {
+            console.log('getting webcam perm')
             if (navigator.permissions) {
                 try {
                     const cam = await navigator.permissions.query({ name: "camera" });
-                    if (cam.state === "granted") return;
+                    if (cam.state === "granted") {
+                        console.log("already granted cam")
+                        return;
+
+                    }
                     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                         navigator.mediaDevices.getUserMedia({ video: true })
                             .then(stream => {
@@ -106,15 +111,15 @@ export default function MockInterviewPage() {
                 };
 
                 recorder.onstop = async () => {
-                    const audioBlob = new Blob(chunks, { type: "audio/wav" });
-                    if (feedbackType === "audio") {
-                        const wavBlob = await getWaveBlob(audioBlob);
-                        const base64str = await convertBlobToBase64(wavBlob);
-                        await sendToGPT4Audio(base64str);
-                    } else if (feedbackType === "text") {
-                        const audioFile = new File([audioBlob], "userAudio.wav", { type: "audio/wav" });
-                        await sendToTranscription(audioFile);
-                    }
+                    // const audioBlob = new Blob(chunks, { type: "audio/wav" });
+                    // if (feedbackType === "audio") {
+                    //     const wavBlob = await getWaveBlob(audioBlob);
+                    //     const base64str = await convertBlobToBase64(wavBlob);
+                    //     await sendToGPT4Audio(base64str);
+                    // } else if (feedbackType === "text") {
+                    //     const audioFile = new File([audioBlob], "userAudio.wav", { type: "audio/wav" });
+                    //     await sendToTranscription(audioFile);
+                    // }
                 }
 
                 recorder.start();
@@ -220,10 +225,10 @@ export default function MockInterviewPage() {
     const toggleRecording = async (isRecording) => {
         if (isRecording) {
             toggleCam(isRecording);
-            // await startRecording();
+            await startRecording();
         } else {
             toggleCam(isRecording);
-            // stopRecording();
+            stopRecording();
         }
     }
 
