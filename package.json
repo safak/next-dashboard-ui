@@ -9,11 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@chakra-ui/react": "^2.10.4",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.2.1",
     "@mui/material": "^6.2.1",
+    "@saas-ui/react": "^2.11.3",
     "firebase": "^11.1.0",
+    "framer-motion": "^6.5.1",
     "next": "14.2.5",
     "openai": "^4.77.0",
     "react": "^18",
