@@ -1,386 +1,276 @@
-'use client'
-import React, { useState, useEffect } from 'react';
-import Webcam from "react-webcam";
+'use client';
+
 import ReactLoading from "react-loading";
-import getWaveBlob from "wav-blob-util";
+import {useEffect, useRef, useState} from "react";
+import {questionData} from "../../../../data/data";
+import LinearProgressWithLabel from "../../../../components/LinearProgressWithLabel";
+import Webcam from "react-webcam";
+import {useRouter} from "next/navigation";
 
 export default function MockInterviewPage() {
 
-    const [isCamOn, setIsCamOn] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [mediaRecorder, setMediaRecorder] = useState(null);
-    const [audioBlob, setAudioBlob] = useState(null);
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [setup, setSetup] = useState(true);
-    const [feedbackType, setFeedbackType] = useState("");
+    const [showQuestion, setShowQuestion] = useState(false);
+    const [isPrep, setIsPrep] = useState(true);
+    const [qIdxs, setQIdxs] = useState([]);
+    const [currIdx, setCurrIdx] = useState(0);
+    const [isRecording, setIsRecording] = useState(false);
+    const [countdown, setCountdown] = useState(5);
+    const [timeLeft, setTimeLeft] = useState(0);
+    const mediaRecorderRef = useRef(null);
     const [error, setError] = useState(false);
 
-    const [countdown, setCountdown] = useState(3);
-    const [showOverlay, setShowOverlay] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
-        if (showOverlay && countdown > 0) {
+        if (sessionStorage.getItem("audio_files") !== null) {
+            sessionStorage.removeItem("audio_files");
+        }
+    }, []);
+
+    useEffect(() => {
+        const indexes = Array.from({ length: questionData.length }, (_, i) => i)
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 3);
+
+        setQIdxs(indexes);
+    }, []);
+
+    useEffect(() => {
+        if (!showQuestion) return;
+        if (countdown === 0) {
+            setIsRecording(true);
+            setIsPrep(false);
+            setTimeLeft(questionData[currIdx][1]);
+            startAudioRecording();
+        } else {
             const timer = setInterval(() => {
-                setCountdown((prevCountdown) => prevCountdown - 1);
+                setCountdown((prevTime) => prevTime - 1);
             }, 1000);
 
-            return () => clearInterval(timer); // Cleanup interval on unmount
-        } else if (countdown === 0) {
-            setShowOverlay(false); // Hide the overlay when countdown ends
+            return () => clearInterval(timer);
         }
-    }, [countdown, showOverlay]);
-    
-    // request microphone permissions
+    }, [countdown, showQuestion]);
+
     useEffect(() => {
-        const getMicPerm = async () => {
-            console.log('getting mic perm')
-            if (navigator.permissions) {
-                try {
-                    // const mic = await navigator.permissions.query({ name: "microphone" });
-                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                        navigator.mediaDevices.getUserMedia({ audio: true })
-                            .then(stream => {
-                                stream.getTracks().forEach((track) => {track.stop()});
-                            })
-                            .catch(error => {
-                                console.error("Error accessing microphone", error);
-                            })
-                    } else {
-                        console.error("MediaRecorder API not supported");
-                    }
-                } catch (error) {
-                    console.error("Permissions API not supported");
-                }
-            }
+        if (timeLeft === 0) {
+            stopAudioRecording();
+        } else {
+            const timer = setInterval(() => {
+                setTimeLeft((prevTime) => prevTime - 1);
+            }, 1000);
+
+            return () => clearInterval(timer);
         }
+    }, [timeLeft]);
 
-        getMicPerm();
-    }, []);
-
-    //request webcam permissions
-    useEffect( () => {
-        const getWebcamPerm = async () => {
-            console.log('getting webcam perm')
-            if (navigator.permissions) {
-                try {
-                    const cam = await navigator.permissions.query({ name: "camera" });
-                    if (cam.state === "granted") {
-                        console.log("already granted cam")
-                        return;
-
-                    }
-                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                        navigator.mediaDevices.getUserMedia({ video: true })
-                            .then(stream => {
-                                stream.getTracks().forEach((track) => {track.stop()});
-                            })
-                            .catch(error => {
-                                console.error("Error accessing webcam", error);
-                            })
-                    } else {
-                        console.error("Webcam API not supported");
-                    }
-                } catch (error) {
-                    console.error("Permissions API not supported");
-                }
-            }
-        }
-
-        getWebcamPerm();
-    }, []);
-
-    const toggleCam = (value) => {
-        setIsLoading(true);
-        setIsCamOn(value);
-        setTimeout(() => {
-            setIsLoading(false);
-        }, 2000);
-    };
-
-    // set up and record microphone audio
-    const startRecording = async () => {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    // prompt mic permissions
+    useEffect(() => {
+        const promptAudio = async () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const recorder = new MediaRecorder(stream);
-                setMediaRecorder(recorder);
+                stream.getTracks().forEach(track => track.stop());
+            } catch (error) {
+                console.error('Unexpected error occurred when getting mic permissions');
+            }
+        };
 
-                const chunks = [];
-                recorder.ondataavailable = (event) => {
-                    chunks.push(event.data);
-                };
+        promptAudio();
+    }, []);
 
-                recorder.onstop = async () => {
-                    // const audioBlob = new Blob(chunks, { type: "audio/wav" });
-                    // if (feedbackType === "audio") {
-                    //     const wavBlob = await getWaveBlob(audioBlob);
-                    //     const base64str = await convertBlobToBase64(wavBlob);
-                    //     await sendToGPT4Audio(base64str);
-                    // } else if (feedbackType === "text") {
-                    //     const audioFile = new File([audioBlob], "userAudio.wav", { type: "audio/wav" });
-                    //     await sendToTranscription(audioFile);
-                    // }
+    // prompt cam permissions
+    useEffect(() => {
+        const promptCam = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                stream.getTracks().forEach(track => track.stop());
+            } catch (error) {
+                console.error('Unexpected error occurred when getting cam permissions');
+            }
+        };
+
+        promptCam();
+    }, []);
+
+    // set error if mic or cam permissions denied
+    useEffect(() => {
+        async function checkPermissions() {
+            try {
+                const micPermission = await navigator.permissions.query({ name: 'microphone' });
+                const camPermission = await navigator.permissions.query({ name: 'camera' });
+
+                if (micPermission.state !== 'granted' || camPermission.state !== 'granted') {
+                    setError(true);
+                } else {
+                    setError(false);
                 }
 
-                recorder.start();
-            } catch (error) {
-                console.log("Error when starting recording", error);
+                micPermission.onchange = () => {
+                    if (micPermission.state !== 'granted' || camPermission.state !== 'granted') {
+                        setError(true);
+                    } else {
+                        setError(false);
+                    }
+                };
+
+                camPermission.onchange = () => {
+                    if (micPermission.state !== 'granted' || camPermission.state !== 'granted') {
+                        setError(true);
+                    } else {
+                        setError(false);
+                    }
+                };
+            } catch (err) {
+                console.error('Error checking media permissions:', err);
+                setError(true);
             }
         }
+
+        checkPermissions();
+    }, []);
+
+    const startAudioRecording = async () => {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const recorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = recorder;
+
+        let chunks = [];
+
+        stream.getTracks().forEach(track => {
+            track.addEventListener("ended", () => {
+                if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+                    mediaRecorderRef.current.stop();
+                    mediaRecorderRef.current.stream.getTracks().forEach(t => t.stop());
+                    mediaRecorderRef.current = null;
+                }
+            })
+        });
+
+        recorder.ondataavailable = (event) => {
+            chunks.push(event.data);
+        };
+
+
+        recorder.onstop = async () => {
+            const audioBlob = new Blob(chunks, { type: "audio/wav" });
+
+            const newURL = URL.createObjectURL(audioBlob);
+
+            let audioFiles = sessionStorage.getItem("audio_files");
+            audioFiles = audioFiles ? JSON.parse(audioFiles) : [];
+            audioFiles.push(newURL);
+            sessionStorage.setItem("audio_files", JSON.stringify(audioFiles));
+        };
+
+        recorder.start();
     }
 
-    // stop recording microphone audio
-    const stopRecording = () => {
-        if (mediaRecorder) {
-            mediaRecorder.stop();
-            mediaRecorder.stream.getTracks().forEach((track) => track.stop());
-            setMediaRecorder(null);
+    const stopAudioRecording = () => {
+        if (mediaRecorderRef.current) {
+            mediaRecorderRef.current.stop();
+            mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+            mediaRecorderRef.current = null;
+            handleNextQuestion();
         }
     };
 
-    // convert wavBlob into base64 for openai api
-    function convertBlobToBase64(blob) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result.split(',')[1]);
-            reader.onerror = (error) => reject(error);
-            reader.readAsDataURL(blob);
-        });
-    }
-
-    // get response to question as an audio output from openai api (gpt-4o-audio-preview model)
-    async function sendToGPT4Audio(base64str) {
-        try {
-            const response = await fetch("/api/audio", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    base64str: base64str,
-                    question: "Is this recording silent?",
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error(`Error: ${response.statusText}`);
-            }
-
-            const result = await response.json();
-        } catch (error) {
-            console.error("Error sending audio to API:", error);
+    const handleStart = () => {
+        if (isPrep) {
+            setShowQuestion(true);
+        } else if (isRecording) {
+            stopAudioRecording();
         }
     }
 
-    // turn user audio into text using openai api (whisper model)
-    async function sendToTranscription(audioFile) {
-        try {
-            const response = await fetch("/api/transcription", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/octet-stream",
-                },
-                body: audioFile,
-            });
-
-            if (!response.ok) {
-                throw new Error(`Error: ${response.statusText}`);
-            }
-
-            const result = await response.json();
-            console.log('tranascription', result);
-            if (result.transcription) {
-                const assessment = await makeAssessment(result.transcription);
-            }
-
-        } catch (error) {
-            console.error("Error sending transcription", error);
-        }
-    }
-
-    async function makeAssessment(transcription) {
-        try {
-            const response = await fetch("/api/text", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    question: "What is your name",
-                    userResponse: transcription
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error(`Error: ${response.statusText}`);
-            }
-
-            const result = await response.json();
-            console.log('assessment from api call', result);
-        } catch (error) {
-            console.error("Error getting assessment", error);
-        }
-    }
-
-    const toggleRecording = async (isRecording) => {
-        if (isRecording) {
-            toggleCam(isRecording);
-            await startRecording();
-        } else {
-            toggleCam(isRecording);
-            stopRecording();
-        }
-    }
-
-    const toggleFeedbackType = (type) => {
-        setFeedbackType(type);
-    }
-
-    const handleFeedbackSelection = (e) => {
-        e.preventDefault();
-
+    const handleNextQuestion = () => {
+        if (qIdxs.length <= 0) return
         setIsLoading(true);
-        setTimeout(() => {
-            setIsLoading(false);
-            setSetup(false);
-            setError(false);
-        }, 500);
-    }
 
-    const checkError = () => {
-        if (!feedbackType) {
-            setError(true);
+        if (currIdx === qIdxs.length - 1) {
+            setTimeout(() => {
+                router.push(`/dashboard/student/mockinterview/results?questions=${encodeURIComponent(qIdxs.join(','))}`);
+            })
+        } else {
+            const new_idx = currIdx + 1;
+            setIsPrep(true);
+            setIsRecording(false);
+            setTimeLeft(questionData[qIdxs[new_idx]][1])
+            setCurrIdx(prev => prev + 1);
+            setCountdown(5);
+            setShowQuestion(false);
+
+            setTimeout(() => {
+                setIsLoading(false)
+            }, 1000)
         }
     }
-
-
 
     return (
-        <div
-            className="h-[90%] w-full flex flex-col items-center justify-center"
-        >
+        <div className="h-[90%] w-full flex flex-col items-center justify-center">
             {
-                setup && (
-                    isLoading ? (
-                        <ReactLoading type="bubbles" color="black" />
-                    ) : (
-                        <div className="flex flex-col items-center justify-center gap-8 p-6 bg-gray-100 rounded-lg shadow-md">
-                            <p className="text-xl font-semibold text-gray-800">
-                                Select your interview style:
-                            </p>
-                            <form
-                                className="flex flex-col w-full max-w-md gap-6"
-                                onSubmit={(e) => handleFeedbackSelection(e)}
-                            >
-                                <div className="flex flex-col gap-4">
-                                    <div className="flex items-center gap-3">
-                                        <input
-                                            type="radio"
-                                            name="interview-type"
-                                            value="text"
-                                            checked={feedbackType === "text"}
-                                            required
-                                            onChange={() => toggleFeedbackType("text")}
-                                            className="w-5 h-5 text-green-600 border-gray-300 focus:ring-green-500"
-                                        />
-                                        <span className="text-gray-700">Text Feedback</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <input
-                                            type="radio"
-                                            name="interview-type"
-                                            value="audio"
-                                            required
-                                            checked={feedbackType === "audio"}
-                                            onChange={() => toggleFeedbackType("audio")}
-                                            className="w-5 h-5 text-green-600 border-gray-300 focus:ring-green-500"
-                                        />
-                                        <span className="text-gray-700">
-                                Audio Feedback (WIP)
-                            </span>
-                                    </div>
-                                    <input
-                                        type="submit"
-                                        onClick={checkError}
-                                        value="Continue"
-                                        className="w-full py-3 font-medium text-white bg-green-600 rounded-lg shadow-md hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none"
-                                    />
-                                </div>
-                                {error && (
-                                    <p className="mt-4 text-sm font-semibold text-center text-red-500 animate-bounce">
-                                        Select one option!
-                                    </p>
-                                )}
-                            </form>
+                isLoading ?
+                    <ReactLoading type="bubbles" color="black"/> :
+                    <div className="w-full grid grid-cols-10 grid-rows-1 gap-4">
+
+                        {/*  Question  */}
+                        <div className="col-start-3 col-span-2 p-4 bg-white shadow-lg rounded-lg border border-gray-200 flex flex-col items-center justify-between">
+                            <>
+                                {
+                                    showQuestion ?
+                                        <>
+                                            <h2 className="text-lg font-semibold text-gray-800 mb-2">Question</h2>
+                                            <p className="text-gray-600">{questionData[qIdxs[currIdx]][0]}</p>
+                                        </> :
+                                        <p className="text-lg font-semibold text-gray-800">Click Start</p>
+                                }
+                            </>
+
+                            <div className="flex flex-col gap-4 w-full">
+                                {
+                                    showQuestion && isRecording &&
+                                    <LinearProgressWithLabel value={timeLeft} variant="determinate"
+                                                             total={questionData[qIdxs[currIdx]][1]}/>
+                                }
+                                <button
+                                    className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition duration-200 disabled:bg-gray-400 disabled:text-gray-700 disabled:cursor-not-allowed"
+                                    onClick={handleStart}
+                                    // disabled={(showQuestion && !isRecording) || questionLeft === 0}
+                                    disabled={(showQuestion && !isRecording) || error}
+                                >
+                                    {/*{ showQuestion ? questionLeft === 0 ? "Done" : "Continue" : "Start"}*/}
+                                    { showQuestion ? "Continue" : "Start" }
+                                </button>
+                                { error && <p className="text-sm text-red-500 text-center">Enable microphone and camera permissions</p> }
+                            </div>
                         </div>
-                    )
-                )
-            }
-            {
-                !setup && (
-                    isProcessing ?
-                    <ReactLoading
-                        type="bubbles"
-                        color="black"
-                    /> :
-                    <>
+
+                        {/*  Webcam  */}
                         <div
-                            className="w-full flex flex-col gap-4 items-center justify-center"
+                            className="w-[640px] h-[480px] bg-black flex items-center justify-center relative rounded-lg overflow-hidden"
                         >
                             <div
-                                className="min-w-[640px] min-h-[480px] bg-black flex items-center justify-center"
+                                className="w-full h-full relative flex items-center justify-center"
                             >
-                                {
-                                    isCamOn && (
-                                        isLoading ? (
-                                            <ReactLoading
-                                                type="bubbles"
-                                                color="black"
-                                            />
-                                        ) : (
-                                            <div
-                                                className="w-full h-full relative"
-                                            >
-                                                <Webcam
-                                                    audio={false}
-                                                    mirrored={true}
-                                                    height={500}
-                                                />
-
-                                                showOverlay && (
-                                                    <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center text-white text-6xl z-10">
-                                                        {countdown}
-                                                    </div>
-                                                )
-                                            </div>
-                                        )
-                                    )
-                                }
+                                <Webcam
+                                    audio={false}
+                                    mirrored={true}
+                                    height={500}
+                                    disablePictureInPicture={true}
+                                />
                             </div>
-                            <button
-                                className={`p-2 px-5 text-2xl text-white ${isCamOn ? "bg-red-600" : "bg-green-600"}`}
-                                onClick={() => {
-                                    if (isCamOn) {
-                                        toggleRecording(false);
-                                    } else {
-                                        toggleRecording(true);
-                                    }
-                                }}
-                            >
-                                {isCamOn ? "Stop" : "Start"}
-                            </button>
-                        </div>
-
-                        {/* Audio Recorder */}
-                        <div>
                             {
-                                audioBlob && (
-                                    <audio controls src={URL.createObjectURL(audioBlob)}/>
-                                )
+                                isPrep &&
+                                <>
+                                    <div className="absolute w-full h-full bg-black bg-opacity-50"></div>
+                                    <div
+                                        className="absolute w-full h-full inset-0 bg-person-outline bg-cover bg-center bg-no-repeat flex items-center justify-center text-white text-6xl z-10"
+                                    >
+                                        {countdown}
+                                    </div>
+                                </>
                             }
                         </div>
-                    </>
-                )
+                    </div>
             }
         </div>
     )

@@ -9,13 +9,11 @@ export default async function handler(req, res) {
             const completion = await openai.chat.completions.create({
                 model: "gpt-4o-mini",
                 messages: [
-                    { role: "developer", content: `You are an interviewer that is assessing a interviewee for a software engineering intern role. The question you asked was 
-                    ${question}. In your assessment, ensure that they were thorough and had enough detail that you would be confident in hiring them. You will receive their response.` },
-                    {
-                        role: "user",
-                        content: `${userResponse}}`,
-                    },
+                    { role: "system", content: `You are an interviewer assessing a software engineering intern. The question you asked is provided below. Analyze the candidate's response and determine if they provided sufficient detail and clarity. Write your evaluation as if it will be shared with the end user.` },
+                    { role: "user", content: `Question: ${question}` },
+                    { role: "user", content: `Candidate Response: ${userResponse}` }
                 ],
+                max_completion_tokens: 150
             });
 
             res.status(200).json({
