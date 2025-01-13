@@ -62,16 +62,16 @@ model Parent {
   img String?
   bloodType String?
   sex MemberSex
-  Lesson Lesson @relation(fields:[])
   createdAd DateTime @default(now())
+  LessonId Int
+  lesson Lesson @relation(fields:[LessonId], references: [id])
  }
 
 
   model Lesson{
     id Int @id @default(autoincrement())
-    lessonName String @unique
+    lessonName String @unique  //eg. Kick, HMD, BJJ etc
     teachers Teacher[]
-
   }
 /*
 
