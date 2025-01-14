@@ -13,11 +13,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-enum MemberSex{
-  MALE
-  FEMALE
+model Academy {
+  id Int @id @default(autoincrement())
+  academyName String
+  academyOwnerId Int
+  
 }
+
+
 model Admin {
   id String @id
   username String @unique
@@ -35,9 +38,19 @@ model Member {
   img String?
   bloodType String?
   sex MemberSex
-  createdAd DateTime @default(now())
+  createdOn DateTime @default(now())
+  
+  attendance Attendance[]
+  
+  hmdBeltId Int
+  hmdBelt HMDBelts @relation(fields:[hmdBeltId], references: [id])
+
+  kickBeltId Int
+  kickBelt KickBelts @relation(fields:[kickBeltId], references: [id])
+
   parentId String
-  Parent Parent @relation(fields: [parentId], references: [id])
+  parent Parent @relation(fields: [parentId], references: [id])
+  lessons Lesson[]
 }
 
 model Parent {
@@ -48,9 +61,10 @@ model Parent {
   email String? @unique
   phone String?
   address String?
-  createdAd DateTime @default(now())
-  Children Member[]  
+  createdOn DateTime @default(now())
+  children Member[]  
 }
+
  model Teacher{
   id String @id
   username String @unique
@@ -62,31 +76,95 @@ model Parent {
   img String?
   bloodType String?
   sex MemberSex
-  Lesson Lesson @relation(fields:[])
-  createdAd DateTime @default(now())
+  createdOn DateTime @default(now())
+
+  lessons Lesson[]
+  classes Class[]
  }
 
-
-  model Lesson{
+  model Class{
     id Int @id @default(autoincrement())
-    lessonName String @unique
-    teachers Teacher[]
+    className String
+    classDescription String
+    capacity Int
+    day Day
+    startTime DateTime
+    endTime DateTime
+
+    lessons Lesson[]
+    attendance Attendance[]
+
+    teacherId String
+    teacher Teacher @relation(fields: [teacherId], references: [id])
 
   }
-/*
 
-model Attendance {}
+   model Lesson{
+    id Int @id @default(autoincrement())
+    lessonName String @unique
+    lessonDescription String
+    
+    teacherId String
+    Teacher Teacher @relation(fields: [teacherId], references: [id])
+    classId Int
+    class Class @relation(fields: [classId], references: [id])
+    memberId String
+    member Member @relation(fields:[memberId], references:[id])
+  }
 
-model Class{}
+  model HMDBelts{
+    id Int @id @default(autoincrement())
+    level String @unique
+
+    members Member[]
+  }
+
+   model KickBelts{
+    id Int @id @default(autoincrement())
+    level String @unique
+
+    members Member[]
+  }
+
+  model Attendance {
+    id Int @id @default(autoincrement())
+    date DateTime
+    present Boolean
+
+    memberId String
+    member Member @relation(fields:[memberId], references: [id])
+    classId Int
+    class Class @relation(fields: [classId], references: [id])
+  }
+
+  model Announcements{
+    id Int  @id @default(autoincrement())
+    title String
+    description String
+    date DateTime
+
+  }
+
+  model Events{
+    id Int  @id @default(autoincrement())
+    startTime DateTime
+    endTime DateTime
+    title String
+    description String
+  } 
 
 
+enum MemberSex{
+  MALE
+  FEMALE
+}
 
-model Belts{}
-
-model Schedule{}
-
-model Results{}
-
-model Announcements{}
-
-model Events{} */
+enum Day {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
