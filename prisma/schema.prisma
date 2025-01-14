@@ -76,31 +76,95 @@ model Parent {
   img String?
   bloodType String?
   sex MemberSex
-  Lesson Lesson @relation(fields:[])
-  createdAd DateTime @default(now())
+  createdOn DateTime @default(now())
+
+  lessons Lesson[]
+  classes Class[]
  }
 
+  model Class{
+    id Int @id @default(autoincrement())
+    className String
+    classDescription String
+    capacity Int
+    day Day
+    startTime DateTime
+    endTime DateTime
+
+    lessons Lesson[]
+    attendance Attendance[]
+
+    teacherId String
+    teacher Teacher @relation(fields: [teacherId], references: [id])
+
+  }
 
    model Lesson{
     id Int @id @default(autoincrement())
     lessonName String @unique
-    teachers Teacher[]
+    lessonDescription String
+    
+    teacherId String
+    Teacher Teacher @relation(fields: [teacherId], references: [id])
+    classId Int
+    class Class @relation(fields: [classId], references: [id])
+    memberId String
+    member Member @relation(fields:[memberId], references:[id])
+  }
+
+  model HMDBelts{
+    id Int @id @default(autoincrement())
+    level String @unique
+
+    members Member[]
+  }
+
+   model KickBelts{
+    id Int @id @default(autoincrement())
+    level String @unique
+
+    members Member[]
+  }
+
+  model Attendance {
+    id Int @id @default(autoincrement())
+    date DateTime
+    present Boolean
+
+    memberId String
+    member Member @relation(fields:[memberId], references: [id])
+    classId Int
+    class Class @relation(fields: [classId], references: [id])
+  }
+
+  model Announcements{
+    id Int  @id @default(autoincrement())
+    title String
+    description String
+    date DateTime
 
   }
-/*
 
-model Attendance {}
+  model Events{
+    id Int  @id @default(autoincrement())
+    startTime DateTime
+    endTime DateTime
+    title String
+    description String
+  } 
 
-model Class{}
 
+enum MemberSex{
+  MALE
+  FEMALE
+}
 
-
-model Belts{}
-
-model Schedule{}
-
-model Results{}
-
-model Announcements{}
-
-model Events{} */
+enum Day {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
