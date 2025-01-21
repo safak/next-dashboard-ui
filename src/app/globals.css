@@ -1,3 +1,117 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+.react-calendar{
+    width: 100% !important;
+    border: none !important;
+    font-family: "Inter",sans-serif !important;
+}
+.react-calendar__navigation__label__labelText{
+    font-weight: 600 !important;
+
+}
+.react-calendar__tile--active{
+    background-color:#90caf9 !important ;
+    color: black !important;
+}
+.rbc-btn-group:first-child{
+    display: none !important;
+   
+}
+.rb-toolbar-label{
+    text-align: right !important;
+    padding: 0px 20px !important;
+}
+.rbc-btn-group:last-child{
+   font-size: 13px !important;
+}
+.rbc-btn-group:last-child button{
+   border: none !important;
+   background-color: aliceblue !important;
+   margin-left: 2px !important;
+ }
+ .rbc-toolbar button.rbc-active{
+    background-color: #dbdafe !important;
+    box-shadow: none !important;
+ }
+ .rbc-rime-view{
+    border-color: #eee !important;
+ }
+ .rbc-time-header{
+    display: none !important;
+ }
+ .rbc-time-content{
+    border: none !important;
+ }
+ .rbc-time-gutter.rbc-time-column{
+    font-size: 12px !important;
+ }
+ .rbc-time-gutter.rbc-time-column .rbc-timeslot-group{
+   padding: 0px 20px !important;
+ }
+ .rbc-timeslot-group{
+  background-color: #f7fdff !important;
+ }
+ .rbc-day-slot{
+   font-size: 14px !important;
+ }
+ .rbc-event{
+   border: none !important;
+   color: black !important;
+   padding: 10px !important;
+   margin: 10px !important;
+   width: 99% !important;
+ }
+ .rbc-event:nth-child(1){
+   background-color: aquamarine !important;
+   border: none !important;
+ }
+ .rbc-event:nth-child(2){
+   background-color: #ffdd00 !important;
+   border: none !important;
+ }
+ .rbc-event:nth-child(3){
+   background-color: #ff6666 !important;
+   border: none !important;
+ }
+ .rbc-event:nth-child(4){
+    background-color: #ba5ff7 !important;
+    border: none !important;
+  }
+    .rbc-event:nth-child(5){
+        background-color: #64ffe5 !important;
+        border: none !important;
+    }
+    .rbc-event:nth-child(6){
+        background-color: #66ff73 !important;
+        border: none !important;
+    }
+    .rbc-event:nth-child(7){
+        background-color: #d2f35b !important;
+        border: none !important;
+    }
+    .rbc-event:nth-child(8){
+        background-color: #ff7a7a !important;
+        border: none !important;
+    }
+    .rbc-event:nth-child(9){
+        background-color: #d950eb !important;
+        border: none !important;
+    }
+    .rbc-event:nth-child(10){
+        background-color: #f59250 !important;
+        border: none !important;
+    }
+
+ .rbc-event-content{
+   padding: 0px !important;
+ }
+ .rbc-event-label{
+    color: gray !important;
+   font-size: 12px !important;
+   margin-bottom: 6px !important;
+   
+ }
+ .rbc-event-allday{
+   font-size: 12px !important;
+ }
