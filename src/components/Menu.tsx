@@ -1,3 +1,6 @@
+import Image from "next/image";
+import Link from "next/link";
+
 const menuItems = [
   {
     title: "MENU",
@@ -38,42 +41,42 @@ const menuItems = [
         href: "/list/classes",
         visible: ["admin", "teacher"],
       },
-      {
-        icon: "/lesson.png",
-        label: "Lessons",
-        href: "/list/lessons",
-        visible: ["admin", "teacher"],
-      },
+      // {
+      //   icon: "/lesson.png",
+      //   label: "Lessons",
+      //   href: "/list/lessons",
+      //   visible: ["admin", "teacher"],
+      // },
       {
         icon: "/exam.png",
         label: "Exams",
         href: "/list/exams",
         visible: ["admin", "teacher", "student", "parent"],
       },
-      {
-        icon: "/assignment.png",
-        label: "Assignments",
-        href: "/list/assignments",
-        visible: ["admin", "teacher", "student", "parent"],
-      },
+      // {
+      //   icon: "/assignment.png",
+      //   label: "Assignments",
+      //   href: "/list/assignments",
+      //   visible: ["admin", "teacher", "student", "parent"],
+      // },
       {
         icon: "/result.png",
         label: "Results",
         href: "/list/results",
-        visible: ["admin", "teacher", "student", "parent"],
-      },
-      {
-        icon: "/attendance.png",
-        label: "Attendance",
-        href: "/list/attendance",
-        visible: ["admin", "teacher", "student", "parent"],
-      },
-      {
-        icon: "/calendar.png",
-        label: "Events",
-        href: "/list/events",
-        visible: ["admin", "teacher", "student", "parent"],
-      },
+        visible: ["admin", "teacher", "student", "parent"], },
+      // },
+      // {
+      //   icon: "/attendance.png",
+      //   label: "Attendance",
+      //   href: "/list/attendance",
+      //   visible: ["admin", "teacher", "student", "parent"],
+      // },
+      // {
+      //   icon: "/calendar.png",
+      //   label: "Events",
+      //   href: "/list/events",
+      //   visible: ["admin", "teacher", "student", "parent"],
+      // },
       {
         icon: "/message.png",
         label: "Messages",
@@ -112,3 +115,31 @@ const menuItems = [
     ],
   },
 ];
+
+/**
+ * Renders a menu with a list of items.
+ *
+ * The menu is rendered as a vertical list of items, with each item
+ * containing an icon and a label. The items are grouped by title.
+ */
+
+
+const Menu = () => {
+  return (
+    <div>
+      {menuItems.map(i => (
+        <div className="flex flex-col gap-2" key={i.title}>
+          <span className="hidden lg:block  text-gray-400 font-light my-4">{i.title}</span>
+          {i.items.map(item => (
+            <Link key={item.label} href={item.href} className="flex items-center justify-center lg:justify-start gap-4 text-gray-500 py-2">
+            <Image src={item.icon} alt={item.label} width={24} height={24} />
+            <span className="hidden lg:block">{item.label}</span>
+            </Link>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default Menu;
