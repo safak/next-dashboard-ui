@@ -1,3 +1,189 @@
+/* ./src/app/globals.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    /* --- Light Theme --- */
+    --background: 150 30% 90%;
+    --foreground: 150 10% 25%;
+
+    --card: 153 20% 84%; /* #d6eae4 */
+    --card-foreground: 153 10% 20%;
+
+    --popover: 150 17% 80%; /* Slightly lighter than background */
+    --popover-foreground: 150 15% 25%;
+
+    --primary: 150 36% 65%;
+    --primary-foreground: 150 70% 5%;
+    --primary-hover: 150 30% 80%;
+
+    --secondary: 166 94% 20%; /* #04614C */
+    --secondary-foreground: 163 100% 95%; /* Near White */
+
+    --muted: 160 33% 88%; /* #b7d8ca */
+    --muted-foreground: 180 5% 45%; /* Lighter Text */
+
+    --accent: 154 96% 45%; /* Same as primary in this example */
+    --accent-foreground: 154 100% 5%;
+    --accent-hover: 154 86% 35% / 0.8;
+
+    --destructive: 0 84% 60%; /* Bright Red */
+    --destructive-foreground: 0 0% 100%; /* White */
+
+    /* --- NEW: Success --- */
+    --success: 145 70% 45%; /* Medium Green */
+    --success-foreground: 145 20% 98%; /* Very Light Green/White */
+
+    /* --- NEW: Warning --- */
+    --warning: 45 95% 55%; /* Bright Yellow/Orange */
+    --warning-foreground: 45 50% 15%; /* Dark Brown/Black */
+
+    /* --- NEW: Info --- */
+    --info: 210 90% 55%; /* Bright Blue */
+    --info-foreground: 210 20% 98%; /* Very Light Blue/White */
+
+    --border: 150 10% 75%; /* Light Gray-Green */
+    --input: 150 30% 80%; /* Slightly darker Input Border */
+    --ring: 150 30% 45%; /* Primary color for focus */
+
+    /* --- NEW: Optional Subtle Variations --- */
+    --background-subtle: 180 17% 94%; /* Slightly darker than main bg */
+    --border-subtle: 163 36% 88%; /* Slightly lighter than main border */
+
+    --radius: 0.75rem;
+    /* --font-sans: ... */
+    /* --font-mono: ... */
+  }
+
+  .dark {
+    /* --- Dark Theme --- */
+    --background: 150 60% 5%;
+    --foreground: 150 10% 50%;
+
+    --card: 150 40% 7%; /* #031b1b */
+    --card-foreground: 150 25% 45%;
+
+    --popover: 150 30% 10%; /* Slightly darker than dark card */
+    --popover-foreground: 150 15% 60%;
+
+    --primary: 150 66% 15%;
+    --primary-foreground: 150 10% 63%;
+    --primary-hover: 150 40% 10%; /* Slightly lighter */
+
+    --secondary: 166 94% 20%; /* #04614C */
+    --secondary-foreground: 163 100% 95%; /* Near White */
+
+    --muted: 166 35% 13%; /* #142e28 */
+    --muted-foreground: 180 5% 50%; /* Lighter muted text */
+
+    --accent: 154 96% 45%; /* #04DF82 */
+    --accent-foreground: 154 15% 5%;
+    --accent-hover: 154 96% 45% / 0.7; /* rgba(4,223,130,0.1) */
+
+    --destructive: 0 72% 51%; /* Darker Red */
+    --destructive-foreground: 0 0% 95%; /* Light Gray/White */
+
+    /* --- NEW: Success (Dark) --- */
+    --success: 145 70% 30%; /* Darker Green */
+    --success-foreground: 145 20% 90%; /* Light Green/Gray */
+
+    /* --- NEW: Warning (Dark) --- */
+    --warning: 45 95% 40%; /* Darker Yellow/Orange */
+    --warning-foreground: 45 30% 90%; /* Light Yellow/Gray */
+
+    /* --- NEW: Info (Dark) --- */
+    --info: 210 90% 45%; /* Darker Blue */
+    --info-foreground: 210 20% 90%; /* Light Blue/Gray */
+
+    --border: 150 30% 15%; /* #142e28 Adjusted slightly */
+    --input: 150 35% 20%; /* Slightly lighter input border */
+    --ring: 150 40% 45%; /* Primary color for focus */
+
+    /* --- NEW: Optional Subtle Variations (Dark) --- */
+    --background-subtle: 180 60% 6%; /* Slightly lighter than main dark bg */
+    --border-subtle: 166 35% 18%; /* Slightly lighter than main dark border */
+
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground;
+    /* @apply font-sans; */
+  }
+  * {
+    @apply border-border;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold text-foreground; /* Use themed text color */
+    /* Add specific margin/size utilities if desired */
+  }
+  h1 {
+    @apply text-xl lg:text-2xl mb-2;
+  }
+  h2 {
+    @apply text-xl mb-3;
+  }
+  h3 {
+    @apply text-xl mb-2;
+  }
+  /* etc. */
+
+  p {
+    @apply mb-4 leading-relaxed; /* Add bottom margin and adjust line height */
+  }
+  button {
+    @apply disabled:opacity-50 disabled:cursor-not-allowed; /* Add padding and border radius */
+  }
+
+  ul,
+  ol {
+    @apply list-inside mb-4; /* Style lists */
+  }
+  ul {
+    @apply list-disc;
+  }
+  ol {
+    @apply list-decimal;
+  }
+  li {
+    @apply mb-1;
+  }
+
+  /* Basic input styling (can be expanded or moved to components) */
+  textarea {
+    @apply border bg-input px-3 py-2 rounded-md placeholder:text-muted-foreground;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+    /* Apply border, bg, padding, radius, placeholder color, and focus ring */
+  }
+  select,
+  input,
+  [type='date'] {
+    @apply mt-1 block w-full rounded-full bg-input border border-input text-sm text-foreground shadow-sm;
+    @apply focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1;
+  }
+
+  img,
+  svg,
+  video,
+  canvas,
+  audio,
+  iframe,
+  embed,
+  object {
+    @apply block align-middle; /* Common reset for media elements */
+  }
+  img,
+  video {
+    @apply max-w-full h-auto; /* Prevent images/videos from overflowing containers */
+  }
+}

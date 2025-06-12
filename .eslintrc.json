@@ -1,3 +1,37 @@
 {
-  "extends": "next/core-web-vitals"
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    // "plugin:react-hooks/recommended", // Removed as it's included in next/core-web-vitals
+    "plugin:@typescript-eslint/recommended", // Add TypeScript recommended rules
+    "next/core-web-vitals", // Add Next.js core rules
+    "prettier" // Ensure prettier is last
+  ],
+  "parser": "@typescript-eslint/parser", // Set the parser
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": "latest",
+    "sourceType": "module",
+    "project": "./tsconfig.json" // Point to tsconfig for type-aware linting
+  },
+  "plugins": ["react", "@typescript-eslint", "prettier"], // Add @typescript-eslint plugin
+  "rules": {
+    "prettier/prettier": "error",
+    "@typescript-eslint/no-unused-vars": "warn", // Example: Warn about unused vars
+    "@typescript-eslint/no-explicit-any": "warn", // Example: Warn about explicit 'any'
+    "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off"
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
 }

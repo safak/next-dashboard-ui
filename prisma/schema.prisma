@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enum for User Roles
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+
+// Unified User model for NextAuth.js
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique // Added username field
+  name          String?
+  email         String?   @unique // Keep email for NextAuth adapter/other providers
+  emailVerified DateTime?
+  image         String?
+  password      String? // Added for Credentials provider
+  role          Role      @default(EMPLOYEE) // Added Role field
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  vacationDays  Int?      @default(20) // Added vacation days, default to 20 (adjust as needed)
+
+  accounts      Account[]
+  sessions      Session[]
+
+  // Relations
+  designs       Design[]
+  events        Event[]
+  notes         Note[] // Existing Note relation
+}
+
+
+// NextAuth.js Models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Existing Models - Updated Relations
+model Design {
+  id           Int       @id @default(autoincrement())
+  companyId    Int
+  company      Company   @relation(fields: [companyId], references: [id])
+  templateName String
+  status       String // Consider changing to Status enum
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  userId       String? // Changed from employeeId Int to userId String - TEMPORARILY OPTIONAL
+  user         User?     @relation(fields: [userId], references: [id]) // Changed relation
+  partners     String?
+  designNotes  String?   // Renamed from 'notes' to avoid potential conflict
+  noteId       Int?      // Existing relation field, potentially redundant?
+  note         Note[]    // Existing relation, potentially redundant?
+}
+
+model Company {
+  id        Int      @id // Removed autoincrement default, ID must be provided
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  designs   Design[]
+  Note      Note[]
+}
+
+model Event {
+  id         Int       @id @default(autoincrement())
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  startDate  DateTime
+  endDate    DateTime
+  title      String    // Added title field
+  description String?   // Added description field
+  allDay     Boolean?  // Added allDay field (optional)
+  color      String?   // Added color field (optional)
+  type       EventType
+  userId     String    // Made userId required
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade) // Made relation required, added cascade delete
+}
+
+model Note {
+  id         Int      @id @default(autoincrement())
+  companyId  Int?
+  company    Company? @relation(fields: [companyId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  content    String
+  userId     String? // Changed from employeeId Int to userId String - TEMPORARILY OPTIONAL
+  user       User?     @relation(fields: [userId], references: [id]) // Changed relation - TEMPORARILY OPTIONAL
+  personal   Boolean
+  temporary  Boolean
+  Design     Design?  @relation(fields: [designId], references: [id])
+  designId   Int?     @unique // Added unique constraint based on relation type
+  quickNote  Boolean  @default(false)
+}
+
+// Updated EventType enum to match frontend usage
+enum EventType {
+  MEETING
+  VACATION
+  OTHER
+  HOLIDAY // Added HOLIDAY type (consider if these should be stored differently)
+  // Removed TRAINING, SICK_LEAVE for now, can be added back if needed
+}
+
+enum Status {
+  NEW
+  WAITING
+  NOT_SEND
+  SEND
+  DONE
+}
