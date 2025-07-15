@@ -20,22 +20,25 @@ interface MultiSelectWithSelectStyleProps {
   label: string;
   param: string;
   options: Option[];
+  defaultValue?: string[]; // ✅ Ajouté pour valeur par défaut
 }
 
 export function MultiSelectWithSelectStyle({
   label,
   param,
   options,
+  defaultValue,
 }: MultiSelectWithSelectStyleProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [open, setOpen] = React.useState(false);
 
-  const selectedValues = React.useMemo(
-    () => new Set(searchParams.get(param)?.split(",") ?? []),
-    [searchParams, param]
-  );
+  const selectedValues = React.useMemo(() => {
+    const urlParam = searchParams.get(param);
+    const values = urlParam?.split(",") ?? defaultValue ?? [];
+    return new Set(values);
+  }, [searchParams, param, defaultValue]);
 
   const handleToggle = (id: string) => {
     const updated = new Set(selectedValues);
@@ -52,8 +55,8 @@ export function MultiSelectWithSelectStyle({
     } else {
       newParams.delete(param);
     }
-    newParams.delete("page"); // reset pagination on filter
 
+    newParams.delete("page"); // reset page on filter change
     router.push(`${pathname}?${newParams.toString()}`);
   };
 
@@ -62,11 +65,7 @@ export function MultiSelectWithSelectStyle({
       <span className="text-sm font-medium">{label}</span>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            className="w-full justify-between"
-            role="combobox"
-          >
+          <Button variant="outline" className="w-full justify-between">
             {selectedValues.size > 0
               ? `${selectedValues.size} sélectionné(s)`
               : `Choisir ${label.toLowerCase()}`}

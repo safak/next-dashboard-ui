@@ -127,17 +127,7 @@ export default async function StudentReportPage({
     ).toFixed(2);
     return (
       <tr key={mark.id} className="border-b even:bg-slate-50 text-sm">
-        <td>
-          {mark.student.name} {mark.student.surname}
-          <br />
-          <span className="text-xs text-gray-500">{mark.student.class.name}</span>
-        </td>
-        <td>{mark.subject.name}</td>
-        <td>{mark.period.label}</td>
-        <td>
-          {mark.score}/{mark.subject.maxScore}
-        </td>
-        <td>{normalizedScore}%</td>
+        <td>{mark.student.name} {mark.student.surname}<br /><span className="text-xs text-gray-500">{mark.student.class.name}</span></td><td>{mark.subject.name}</td><td>{mark.period.label}</td><td>{mark.score}/{mark.subject.maxScore}</td><td>{normalizedScore}%</td>
       </tr>
     );
   };
