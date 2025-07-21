@@ -3,13 +3,72 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { currentUserId, role } from "@/lib/utils";
+import { getUserSessionInfo } from "@/lib/session";
 import { Class, Event, Prisma} from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 type EventList = Event & { class: Class};
- const columns = [
+ 
+const EventListPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) => {
+  const { role,currentUserId } = await getUserSessionInfo();
+   
+  if (!role || !currentUserId) {
+    notFound();
+  }
+  const resolvedParams = await searchParams;
+  const { page, ...queryParams } = resolvedParams;
+
+  // URL PARAMS CONDITION
+
+  const query: Prisma.EventWhereInput = {};
+
+if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "search":
+            query.title = { contains: value, /* mode: "insensitive" */ };
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+
+  // ROLE CONDITIONS
+
+const roleConditions: { [key: string]: Prisma.ClassWhereInput } = {
+  teacher: { lessons: { some: { teacherId: currentUserId! } } },
+  student: { students: { some: { id: currentUserId! } } },
+  parent: { students: { some: { parentId: currentUserId! } } },
+};
+
+// Appliquer au filtre
+query.class = {
+  is: roleConditions[role as keyof typeof roleConditions] || undefined
+};
+
+
+  const p = page ? parseInt(page) : 1;
+  const [data, count] = await prisma.$transaction([
+    prisma.event.findMany({
+      where: query,
+      include: {
+        class: true,
+      },
+      take: ITEM_PER_PAGE,
+      skip: ITEM_PER_PAGE * (p - 1),
+    }),
+    prisma.event.count({ where: query }),
+  ]);
+  const columns = [
     {
       header: "Title",
       accessor: "title",
@@ -81,59 +140,6 @@ type EventList = Event & { class: Class};
       </td>
     </tr>
     ];
-const EventListPage = async ({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | undefined }>;
-}) => {
-  const resolvedParams = await searchParams;
-  const { page, ...queryParams } = resolvedParams;
-
-  // URL PARAMS CONDITION
-
-  const query: Prisma.EventWhereInput = {};
-
-if (queryParams) {
-    for (const [key, value] of Object.entries(queryParams)) {
-      if (value !== undefined) {
-        switch (key) {
-          case "search":
-            query.title = { contains: value, /* mode: "insensitive" */ };
-            break;
-          default:
-            break;
-        }
-      }
-    }
-  }
-
-  // ROLE CONDITIONS
-
-const roleConditions: { [key: string]: Prisma.ClassWhereInput } = {
-  teacher: { lessons: { some: { teacherId: currentUserId.toLocaleString()! } } },
-  student: { students: { some: { id: currentUserId.toLocaleString()! } } },
-  parent: { students: { some: { parentId: currentUserId.toLocaleString()! } } },
-};
-
-// Appliquer au filtre
-query.class = {
-  is: roleConditions[role as keyof typeof roleConditions] || undefined
-};
-
-
-  const p = page ? parseInt(page) : 1;
-  const [data, count] = await prisma.$transaction([
-    prisma.event.findMany({
-      where: query,
-      include: {
-        class: true,
-      },
-      take: ITEM_PER_PAGE,
-      skip: ITEM_PER_PAGE * (p - 1),
-    }),
-    prisma.event.count({ where: query }),
-  ]);
-  
 return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
     {/* TOP */}

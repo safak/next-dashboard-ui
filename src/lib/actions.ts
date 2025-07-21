@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 
 import {
@@ -11,42 +10,69 @@ import {
   TeacherSchema,
 } from "./formValidationSchemas";
 import prisma from "./prisma";
-import { currentUserId, role } from "./utils";
+import { getUserSessionInfo } from "@/lib/session";
 import { UserSex } from "@prisma/client";
 
 
 // src/lib/actions.ts
 import fs from "fs/promises"
 import path from "path"
+
+import { signIn } from 'next-auth/react';
+
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+
+export async function logout() {
+  const cookieStore = await cookies();
+  cookieStore.delete("next-auth.session-token");
+  cookieStore.delete("__Secure-next-auth.session-token");
+
+  redirect("/");
+}
+
+
+export async function authenticate(_prevState: any, formData: FormData) {
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+
+  const result = await signIn('credentials', {
+    redirect: false,
+    email,
+    password,
+  });
+
+  if (result?.error) {
+    return 'Email ou mot de passe invalide.';
+  }
+
+  return null;
+}
+
 type CurrentState = { success: boolean; error: boolean };
-/**
- * Sauvegarde une image base64 dans public/uploads/ et retourne son chemin relatif
- */
+
 export async function saveImage(base64: string): Promise<string> {
   try {
-    // Si ce n’est pas un base64 (ex: déjà un nom de fichier), retourne tel quel
     if (!base64.startsWith("data:")) return base64;
 
     const match = base64.match(/^data:(image\/\w+);base64,(.+)$/);
     if (!match) throw new Error("Invalid base64 image format");
 
-    const mimeType = match[1]; // e.g. image/png
-    const ext = mimeType.split("/")[1]; // e.g. png
+    const mimeType = match[1];
+    const ext = mimeType.split("/")[1];
     const buffer = Buffer.from(match[2], "base64");
 
     const fileName = `${Date.now()}.${ext}`;
     const filePath = path.join(process.cwd(), "public", "uploads", fileName);
-
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
     await fs.writeFile(filePath, buffer);
 
-    // Retourne un chemin relatif (stocké dans DB, utilisé dans /uploads/...)
     return `${fileName}`;
   } catch (error) {
     console.error("Error saving image:", error);
     return "";
   }
 }
-
 
 export const createSubject = async (
   currentState: CurrentState,
@@ -412,14 +438,16 @@ export const deleteStudent = async (
 };
 
 export const createExam = async (
+  
   currentState: CurrentState,
   data: ExamSchema
 ) => {
   try {
+    const { role, currentUserId } = await getUserSessionInfo();
      if (role === "teacher") {
        const teacherLesson = await prisma.lesson.findFirst({
          where: {
-           teacherId: currentUserId.toLocaleString()!,
+           teacherId: currentUserId!,
            id: data.lessonId,
          },
        });
@@ -451,10 +479,11 @@ export const updateExam = async (
   data: ExamSchema
 ) => {
   try {
+    const { role, currentUserId } = await getUserSessionInfo();
      if (role === "teacher") {
        const teacherLesson = await prisma.lesson.findFirst({
          where: {
-           teacherId: currentUserId.toLocaleString()
+           teacherId: currentUserId!
          },
        });
 
@@ -491,12 +520,12 @@ export const deleteExam = async (
 
   // const { userId, sessionClaims } = auth();
   // const role = (sessionClaims?.metadata as { role?: string })?.role;
-
+const { role, currentUserId } = await getUserSessionInfo();
   try {
     await prisma.exam.delete({
       where: {
         id: parseInt(id),
-         ...(role === "teacher" ? { lesson: { teacherId: currentUserId.toLocaleString()! } } : {}),
+         ...(role === "teacher" ? { lesson: { teacherId: currentUserId! } } : {}),
       },
     });
 

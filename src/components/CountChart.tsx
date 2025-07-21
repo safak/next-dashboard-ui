@@ -41,7 +41,7 @@ const CountChart = ({ boys, girls }: { boys: number; girls: number }) => {
         </ResponsiveContainer>
       </div>
       <Image
-        src="/maleFemale.png"
+        src="/uploads/maleFemale.png"
         alt=""
         width={50}
         height={50}

@@ -25,10 +25,19 @@ enum FeeCategory {
   CLASS
   INDIVIDUAL
 }
+model User {
+  id       String  @id @default(cuid())
+  email    String  @unique
+  name     String?
+  password String
+  roleId   String
+  role     Role    @relation(fields: [roleId], references: [id])
+}
 
-model Admin {
-  id       String @id
-  username String @unique
+model Role {
+  id    String  @id @default(cuid())
+  name  String  @unique // "admin", "user", etc.
+  users User[]
 }
 
 model Parent {

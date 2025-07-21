@@ -6,111 +6,109 @@ import { Class, Prisma, Subject, Teacher } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { normalizeImageSrc, role } from "@/lib/utils";
+import { normalizeImageSrc } from "@/lib/utils";
 import FormContainer from "@/components/FormContainer";
+import { requireAuthOr404 } from "@/lib/protect";
+import { getUserSessionInfo } from "@/lib/session";
 
 type TeacherList = Teacher & { subjects: Subject[] } & { classes: Class[] };
-const columns = [
-    {
-      header: "Info",
-      accessor: "info",
-    },
-    {
-      header: "Teacher ID",
-      accessor: "teacherId",
-      className: "hidden md:table-cell",
-    },
-    {
-      header: "Subjects",
-      accessor: "subjects",
-      className: "hidden md:table-cell",
-    },
-    {
-      header: "Classes",
-      accessor: "classes",
-      className: "hidden md:table-cell",
-    },
-    {
-      header: "Phone",
-      accessor: "phone",
-      className: "hidden lg:table-cell",
-    },
-    {
-      header: "Address",
-      accessor: "address",
-      className: "hidden lg:table-cell",
-    },
-      ...(role === "admin"
-      ? [
-          {
-            header: "Actions",
-            accessor: "action",
-          },
-        ]
-      : []),
-  ];
-      
-      const renderRow = (item:TeacherList) => [
-         <tr
-      key={item.id}
-      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-kalasaPurpleLight"
-    >
-      <td className="flex items-center gap-4 p-4">
-        <Image
-          src={normalizeImageSrc(item.img)}
-          alt=""
-          width={40}
-          height={40}
-          className="md:hidden xl:block w-10 h-10 rounded-full object-cover"
-        />
-        <div className="flex flex-col">
-          <h3 className="font-semibold">{item.name}</h3>
-          <p className="text-xs text-gray-500">{item?.email}</p>
-        </div>
-      </td>
-      <td className="hidden md:table-cell">{item.username}</td>
-      <td className="hidden md:table-cell">
-        {item.subjects.map(subject=>subject.name).join(",")}
-      </td>
-      <td className="hidden md:table-cell">
-        {item.classes.map(classItem=>classItem.name).join(",")}
-      </td>
-      <td className="hidden md:table-cell">{item.phone}</td>
-      <td className="hidden md:table-cell">{item.address}</td>
-      <td>
-        <div className="flex items-center gap-2">
-          <Link href={`/list/teachers/${item.id}`}>
-            <button className="w-7 h-7 flex items-center justify-center rounded-full bg-kalasaSky">
-              <Image src="/uploads/view.png" alt="" width={16} height={16} />
-            </button>
-          </Link>
-           {role === "admin" && (
-            <FormContainer table="teacher" type="delete" id={item.id} />
-         )}
-        </div>
-      </td>
-    </tr>
-    ];
+
+const columnsWithoutActions = [
+  {
+    header: "Info",
+    accessor: "info",
+  },
+  {
+    header: "Teacher ID",
+    accessor: "teacherId",
+    className: "hidden md:table-cell",
+  },
+  {
+    header: "Subjects",
+    accessor: "subjects",
+    className: "hidden md:table-cell",
+  },
+  {
+    header: "Classes",
+    accessor: "classes",
+    className: "hidden md:table-cell",
+  },
+  {
+    header: "Phone",
+    accessor: "phone",
+    className: "hidden lg:table-cell",
+  },
+  {
+    header: "Address",
+    accessor: "address",
+    className: "hidden lg:table-cell",
+  },
+];
+
+const renderRow = (item: TeacherList, role: string) => (
+  <tr
+    key={item.id}
+    className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-kalasaPurpleLight"
+  >
+    <td className="flex items-center gap-4 p-4">
+      <Image
+        src={normalizeImageSrc(item.img)}
+        alt=""
+        width={40}
+        height={40}
+        className="md:hidden xl:block w-10 h-10 rounded-full object-cover"
+      />
+      <div className="flex flex-col">
+        <h3 className="font-semibold">{item.name}</h3>
+        <p className="text-xs text-gray-500">{item?.email}</p>
+      </div>
+    </td>
+    <td className="hidden md:table-cell">{item.username}</td>
+    <td className="hidden md:table-cell">
+      {item.subjects.map((subject) => subject.name).join(", ")}
+    </td>
+    <td className="hidden md:table-cell">
+      {item.classes.map((classItem) => classItem.name).join(", ")}
+    </td>
+    <td className="hidden md:table-cell">{item.phone}</td>
+    <td className="hidden md:table-cell">{item.address}</td>
+    <td>
+      <div className="flex items-center gap-2">
+        <Link href={`/list/teachers/${item.id}`}>
+          <button className="w-7 h-7 flex items-center justify-center rounded-full bg-kalasaSky">
+            <Image src="/uploads/view.png" alt="" width={16} height={16} />
+          </button>
+        </Link>
+        {role === "admin" && (
+          <FormContainer table="teacher" type="delete" id={item.id} />
+        )}
+      </div>
+    </td>
+  </tr>
+);
+
 const TeacherListPage = async ({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) => {
-  // Await searchParams car c'est un Promise ou un Proxy async
-  const resolvedSearchParams = await searchParams;
+  // Protection de la page
+  await requireAuthOr404(["admin", "teacher"]);
 
-  // Nettoyer les valeurs (prendre la première si tableau)
+  // Récupérer info session utilisateur (rôle notamment)
+  const { role } = await getUserSessionInfo();
+
+  // Récupérer et nettoyer params
+  const resolvedSearchParams = await searchParams;
   const cleanedSearchParams: { [key: string]: string | undefined } = {};
   for (const key in resolvedSearchParams) {
     const value = resolvedSearchParams[key];
     cleanedSearchParams[key] = Array.isArray(value) ? value[0] : value;
   }
-
   const { page, ...queryParams } = cleanedSearchParams;
 
   // Construire la query Prisma
   const query: Prisma.TeacherWhereInput = {};
-
   if (queryParams) {
     for (const [key, value] of Object.entries(queryParams)) {
       if (value !== undefined) {
@@ -123,7 +121,7 @@ const TeacherListPage = async ({
             };
             break;
           case "search":
-            query.name = { contains: value, /* mode: "insensitive" */ };
+            query.name = { contains: value /*, mode: "insensitive" */ };
             break;
           default:
             break;
@@ -147,7 +145,9 @@ const TeacherListPage = async ({
     prisma.teacher.count({ where: query }),
   ]);
 
-  // Reste de ton rendu JSX inchangé
+  // Ajouter ou non la colonne Actions selon rôle
+  const columns = role === "admin" ? [...columnsWithoutActions, { header: "Actions", accessor: "action" }] : columnsWithoutActions;
+
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
@@ -162,18 +162,16 @@ const TeacherListPage = async ({
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-kalasaYellow">
               <Image src="/uploads/sort.png" width={14} height={14} alt="" />
             </button>
-            {role === "admin" && (
-              <FormContainer table="teacher" type="create" />
-            )}
+            {role === "admin" && <FormContainer table="teacher" type="create" />}
           </div>
         </div>
       </div>
       {/* LIST */}
-      <div className="">
-        <Table columns={columns} renderRow={renderRow} data={data} />
+      <div>
+        <Table columns={columns} renderRow={(item: TeacherList) => renderRow(item, role)} data={data} />
       </div>
       {/* PAGINATION */}
-      <div className="">
+      <div>
         <Pagination page={p} count={count} />
       </div>
     </div>

@@ -6,9 +6,49 @@ import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Prisma, Subject, Teacher } from "@prisma/client";
 import Image from "next/image";
-import { role } from "@/lib/utils";
+import { getUserSessionInfo } from "@/lib/session";
 
 type SubjectList = Subject & { teachers: Teacher[] };
+
+const SubjectListPage =  async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) => {
+  const resolvedParams = await searchParams;
+  const { page, ...queryParams } = resolvedParams;
+  const { role } = await getUserSessionInfo();
+  const p = page ? parseInt(page) : 1;
+
+  // URL PARAMS CONDITION
+
+  const query: Prisma.SubjectWhereInput = {};
+
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "search":
+            query.name = { contains: value, /*mode: "insensitive" */};
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+
+  const [data, count] = await prisma.$transaction([
+    prisma.subject.findMany({
+      where: query,
+      include: {
+        teachers: true,
+      },
+      take: ITEM_PER_PAGE,
+      skip: ITEM_PER_PAGE * (p - 1),
+    }),
+    prisma.subject.count({ where: query }),
+  ]);
   const columns = [
     {
       header: "Subject Name",
@@ -45,46 +85,6 @@ type SubjectList = Subject & { teachers: Teacher[] };
       </td>
     </tr>
   );
-const SubjectListPage =  async ({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | undefined }>;
-}) => {
-  const resolvedParams = await searchParams;
-  const { page, ...queryParams } = resolvedParams;
-
-  const p = page ? parseInt(page) : 1;
-
-  // URL PARAMS CONDITION
-
-  const query: Prisma.SubjectWhereInput = {};
-
-  if (queryParams) {
-    for (const [key, value] of Object.entries(queryParams)) {
-      if (value !== undefined) {
-        switch (key) {
-          case "search":
-            query.name = { contains: value, /*mode: "insensitive" */};
-            break;
-          default:
-            break;
-        }
-      }
-    }
-  }
-
-  const [data, count] = await prisma.$transaction([
-    prisma.subject.findMany({
-      where: query,
-      include: {
-        teachers: true,
-      },
-      take: ITEM_PER_PAGE,
-      skip: ITEM_PER_PAGE * (p - 1),
-    }),
-    prisma.subject.count({ where: query }),
-  ]);
-
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
       {/* TOP */}
@@ -94,10 +94,10 @@ const SubjectListPage =  async ({
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-kalasaYellow">
-              <Image src="uploads/filter.png" alt="" width={14} height={14} />
+              <Image src="/uploads/filter.png" alt="" width={14} height={14} />
             </button>
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-kalasaYellow">
-              <Image src="uploads/sors.png" alt="" width={14} height={14} />
+              <Image src="/uploads/sors.png" alt="" width={14} height={14} />
             </button>
             {role === "admin" && (
               <FormContainer table="subject" type="create" />

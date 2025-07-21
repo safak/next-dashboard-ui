@@ -3,34 +3,45 @@ import BigCalendarContainer from "@/components/BigCalendarContainer";
 import FormContainer from "@/components/FormContainer";
 import Performance from "@/components/Performance";
 import prisma from "@/lib/prisma";
-import { normalizeImageSrc, role } from "@/lib/utils";
+import { normalizeImageSrc } from "@/lib/utils";
 import { Teacher } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getUserSessionInfo } from "@/lib/session";
+import { requireAuthOr404 } from "@/lib/protect";
 
 const SingleTeacherPage = async ({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) => {
+  // Protection : autoriser seulement admin et teacher
+  await requireAuthOr404(["admin", "teacher"]);
+
+  // Récupérer rôle user connecté
+  const { role } = await getUserSessionInfo();
+
+  // Extraire l'id du paramètre
   const { id } = await params;
-  
+
+  // Requête prisma
   const teacher:
     | (Teacher & {
         _count: { subjects: number; lessons: number; classes: number };
+        subjects: { name: string }[]; // si besoin
       })
     | null = await prisma.teacher.findUnique({
     where: { id },
     include: {
       _count: {
         select: {
-        subjects: true,
-        lessons: true,
-        classes: true,
+          subjects: true,
+          lessons: true,
+          classes: true,
+        },
       },
-      },
-      subjects: true, // 
+      subjects: true,
     },
   });
 
@@ -60,6 +71,7 @@ const SingleTeacherPage = async ({
                 <h1 className="text-xl font-semibold">
                   {teacher.name + " " + teacher.surname}
                 </h1>
+                {/* Affiche seulement si admin */}
                 {role === "admin" && (
                   <FormContainer table="teacher" type="update" data={teacher} />
                 )}
@@ -76,9 +88,7 @@ const SingleTeacherPage = async ({
                   <Image src="/uploads/date.png" alt="" width={14} height={14} />
                   <span>
                     {teacher.birthday
-                      ? new Intl.DateTimeFormat("en-GB").format(
-                          teacher.birthday
-                        )
+                      ? new Intl.DateTimeFormat("en-GB").format(teacher.birthday)
                       : "-"}
                   </span>
                 </div>
@@ -104,7 +114,7 @@ const SingleTeacherPage = async ({
                 height={24}
                 className="w-6 h-6"
               />
-              <div className="">
+              <div>
                 <h1 className="text-xl font-semibold">90%</h1>
                 <span className="text-sm text-gray-400">Attendance</span>
               </div>
@@ -118,10 +128,8 @@ const SingleTeacherPage = async ({
                 height={24}
                 className="w-6 h-6"
               />
-              <div className="">
-                <h1 className="text-xl font-semibold">
-                  {teacher._count.subjects}
-                </h1>
+              <div>
+                <h1 className="text-xl font-semibold">{teacher._count.subjects}</h1>
                 <span className="text-sm text-gray-400">Branches</span>
               </div>
             </div>
@@ -134,10 +142,8 @@ const SingleTeacherPage = async ({
                 height={24}
                 className="w-6 h-6"
               />
-              <div className="">
-                <h1 className="text-xl font-semibold">
-                  {teacher._count.lessons}
-                </h1>
+              <div>
+                <h1 className="text-xl font-semibold">{teacher._count.lessons}</h1>
                 <span className="text-sm text-gray-400">Lessons</span>
               </div>
             </div>
@@ -150,10 +156,8 @@ const SingleTeacherPage = async ({
                 height={24}
                 className="w-6 h-6"
               />
-              <div className="">
-                <h1 className="text-xl font-semibold">
-                  {teacher._count.classes}
-                </h1>
+              <div>
+                <h1 className="text-xl font-semibold">{teacher._count.classes}</h1>
                 <span className="text-sm text-gray-400">Classes</span>
               </div>
             </div>

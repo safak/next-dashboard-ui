@@ -1,8 +1,9 @@
 import prisma from "@/lib/prisma";
-import { currentUserId, role } from "@/lib/utils";
+import { getUserSessionInfo } from "@/lib/session";
 import { Prisma } from "@prisma/client";
 
 const Announcements =async () => {
+  const { role,currentUserId } = await getUserSessionInfo();
   const roleConditions = {
     teacher: { lessons: { some: { teacherId: currentUserId! } } },
     student: { students: { some: { id: currentUserId! } } },

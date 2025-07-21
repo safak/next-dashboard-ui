@@ -7,7 +7,7 @@ const UserCard =async ({
   type: "admin" | "teacher" | "student" | "parent";
 }) => {
   const modelMap: Record<typeof type, any> = {
-    admin: prisma.admin,
+    admin: prisma.user,
     teacher: prisma.teacher,
     student: prisma.student,
     parent: prisma.parent,

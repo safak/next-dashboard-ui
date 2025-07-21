@@ -1,6 +1,5 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { roles } from "./data";
 import { FieldError } from "react-hook-form";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -19,13 +18,6 @@ const getLatestMonday = (): Date => {
   latestMonday.setDate(today.getDate() - daysSinceMonday);
   return latestMonday;
 };
- const rolesuser = () => roles.map((roles) => {
-   return roles;
-});
-export const role = rolesuser()[0].role;
-export const currentUserId = rolesuser()[0].id;
-export const currentUserName = rolesuser()[0].userRole.map((userNames)=>{ return userNames.name});
-
 export const adjustScheduleToCurrentWeek = (
   lessons: { title: string; start: Date; end: Date }[]
 ): { title: string; start: Date; end: Date }[] => {

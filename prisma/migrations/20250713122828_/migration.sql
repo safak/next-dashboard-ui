@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE `subject` ADD COLUMN `maxScore` DOUBLE NOT NULL DEFAULT 100;

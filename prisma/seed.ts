@@ -1,15 +1,38 @@
 import { PrismaClient, UserSex, Day } from '@prisma/client';
-
+import { hash } from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
   // Create Admins
-  await prisma.admin.createMany({
-    data: [
-      { id: 'admin01', username: 'admin01' },
-      { id: 'admin02', username: 'admin02' },
-    ],
-  });
+
+const prisma = new PrismaClient();
+  const hashedPassword = await hash("monmotdepasse", 10);
+  
+  // 1. Créer les rôles
+await Promise.all(
+  ["admin", "user"].map((name) =>
+    prisma.role.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    })
+  )
+);
+
+// 2. Récupérer le rôle "user"
+const role = await prisma.role.findFirst({ where: { name: "user" } });
+if (!role) throw new Error("Role 'user' not found");
+
+await prisma.user.create({
+  data: {
+    email: "test@exemple.com",
+    name: "Test User",
+    password: hashedPassword,
+    roleId: role.id,
+  },
+});
+
+
 
   // Create School Year
   const schoolYear = await prisma.schoolYear.create({

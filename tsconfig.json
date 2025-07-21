@@ -31,6 +31,7 @@
   "include": [
     "next-env.d.ts",
     "**/*.ts",
+    "types/**/*.d.ts",  // ✅ Ceci est important
     "**/*.tsx",
     ".next/types/**/*.ts"
   ],

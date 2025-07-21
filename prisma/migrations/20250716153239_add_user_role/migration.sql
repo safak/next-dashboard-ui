@@ -1,9 +1,48 @@
 -- CreateTable
-CREATE TABLE `Admin` (
+CREATE TABLE `User` (
+    `id` VARCHAR(191) NOT NULL,
+    `email` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NULL,
+    `password` VARCHAR(191) NOT NULL,
+    `roleId` VARCHAR(191) NOT NULL,
+
+    UNIQUE INDEX `User_email_key`(`email`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Role` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+
+    UNIQUE INDEX `Role_name_key`(`name`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Parent` (
     `id` VARCHAR(191) NOT NULL,
     `username` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `surname` VARCHAR(191) NOT NULL,
+    `email` VARCHAR(191) NULL,
+    `phone` VARCHAR(191) NOT NULL,
+    `address` VARCHAR(191) NOT NULL,
+    `createAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `paymentModalityId` INTEGER NULL,
 
-    UNIQUE INDEX `Admin_username_key`(`username`),
+    UNIQUE INDEX `Parent_username_key`(`username`),
+    UNIQUE INDEX `Parent_email_key`(`email`),
+    UNIQUE INDEX `Parent_phone_key`(`phone`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `PaymentModality` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NOT NULL,
+
+    UNIQUE INDEX `PaymentModality_name_key`(`name`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -28,23 +67,6 @@ CREATE TABLE `Student` (
     UNIQUE INDEX `Student_username_key`(`username`),
     UNIQUE INDEX `Student_email_key`(`email`),
     UNIQUE INDEX `Student_phone_key`(`phone`),
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `Parent` (
-    `id` VARCHAR(191) NOT NULL,
-    `username` VARCHAR(191) NOT NULL,
-    `name` VARCHAR(191) NOT NULL,
-    `surname` VARCHAR(191) NOT NULL,
-    `email` VARCHAR(191) NULL,
-    `phone` VARCHAR(191) NOT NULL,
-    `address` VARCHAR(191) NOT NULL,
-    `createAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-
-    UNIQUE INDEX `Parent_username_key`(`username`),
-    UNIQUE INDEX `Parent_email_key`(`email`),
-    UNIQUE INDEX `Parent_phone_key`(`phone`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -74,6 +96,7 @@ CREATE TABLE `Teacher` (
 CREATE TABLE `Subject` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
+    `maxScore` DOUBLE NOT NULL DEFAULT 100,
 
     UNIQUE INDEX `Subject_name_key`(`name`),
     PRIMARY KEY (`id`)
@@ -182,6 +205,81 @@ CREATE TABLE `Announcement` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `SchoolYear` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `label` VARCHAR(191) NOT NULL,
+    `startDate` DATETIME(3) NOT NULL,
+    `endDate` DATETIME(3) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    UNIQUE INDEX `SchoolYear_label_key`(`label`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Semester` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `label` VARCHAR(191) NOT NULL,
+    `startDate` DATETIME(3) NOT NULL,
+    `endDate` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `Semester_label_key`(`label`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Period` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `label` VARCHAR(191) NOT NULL,
+    `startDate` DATETIME(3) NOT NULL,
+    `endDate` DATETIME(3) NOT NULL,
+    `semesterId` INTEGER NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Fee` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `label` VARCHAR(191) NOT NULL,
+    `amount` DOUBLE NOT NULL,
+    `category` ENUM('GENERAL', 'CLASS', 'INDIVIDUAL') NOT NULL,
+    `classId` INTEGER NULL,
+    `periodId` INTEGER NULL,
+    `semesterId` INTEGER NULL,
+    `schoolYearId` INTEGER NULL,
+    `isActive` BOOLEAN NOT NULL DEFAULT true,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Payment` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `studentId` VARCHAR(191) NOT NULL,
+    `feeId` INTEGER NOT NULL,
+    `schoolYearId` INTEGER NULL,
+    `amount` DOUBLE NOT NULL,
+    `date` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Mark` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `studentId` VARCHAR(191) NOT NULL,
+    `subjectId` INTEGER NOT NULL,
+    `periodId` INTEGER NOT NULL,
+    `schoolYearId` INTEGER NOT NULL,
+    `score` DOUBLE NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    UNIQUE INDEX `Mark_studentId_subjectId_periodId_schoolYearId_key`(`studentId`, `subjectId`, `periodId`, `schoolYearId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `_SubjectToTeacher` (
     `A` INTEGER NOT NULL,
     `B` VARCHAR(191) NOT NULL,
@@ -189,6 +287,21 @@ CREATE TABLE `_SubjectToTeacher` (
     UNIQUE INDEX `_SubjectToTeacher_AB_unique`(`A`, `B`),
     INDEX `_SubjectToTeacher_B_index`(`B`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `_PeriodToSubject` (
+    `A` INTEGER NOT NULL,
+    `B` INTEGER NOT NULL,
+
+    UNIQUE INDEX `_PeriodToSubject_AB_unique`(`A`, `B`),
+    INDEX `_PeriodToSubject_B_index`(`B`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AddForeignKey
+ALTER TABLE `User` ADD CONSTRAINT `User_roleId_fkey` FOREIGN KEY (`roleId`) REFERENCES `Role`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Parent` ADD CONSTRAINT `Parent_paymentModalityId_fkey` FOREIGN KEY (`paymentModalityId`) REFERENCES `PaymentModality`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Student` ADD CONSTRAINT `Student_parentId_fkey` FOREIGN KEY (`parentId`) REFERENCES `Parent`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -242,7 +355,49 @@ ALTER TABLE `Event` ADD CONSTRAINT `Event_classId_fkey` FOREIGN KEY (`classId`) 
 ALTER TABLE `Announcement` ADD CONSTRAINT `Announcement_classId_fkey` FOREIGN KEY (`classId`) REFERENCES `Class`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `Period` ADD CONSTRAINT `Period_semesterId_fkey` FOREIGN KEY (`semesterId`) REFERENCES `Semester`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Fee` ADD CONSTRAINT `Fee_classId_fkey` FOREIGN KEY (`classId`) REFERENCES `Class`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Fee` ADD CONSTRAINT `Fee_periodId_fkey` FOREIGN KEY (`periodId`) REFERENCES `Period`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Fee` ADD CONSTRAINT `Fee_semesterId_fkey` FOREIGN KEY (`semesterId`) REFERENCES `Semester`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Fee` ADD CONSTRAINT `Fee_schoolYearId_fkey` FOREIGN KEY (`schoolYearId`) REFERENCES `SchoolYear`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Payment` ADD CONSTRAINT `Payment_studentId_fkey` FOREIGN KEY (`studentId`) REFERENCES `Student`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Payment` ADD CONSTRAINT `Payment_feeId_fkey` FOREIGN KEY (`feeId`) REFERENCES `Fee`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Payment` ADD CONSTRAINT `Payment_schoolYearId_fkey` FOREIGN KEY (`schoolYearId`) REFERENCES `SchoolYear`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Mark` ADD CONSTRAINT `Mark_studentId_fkey` FOREIGN KEY (`studentId`) REFERENCES `Student`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Mark` ADD CONSTRAINT `Mark_subjectId_fkey` FOREIGN KEY (`subjectId`) REFERENCES `Subject`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Mark` ADD CONSTRAINT `Mark_periodId_fkey` FOREIGN KEY (`periodId`) REFERENCES `Period`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Mark` ADD CONSTRAINT `Mark_schoolYearId_fkey` FOREIGN KEY (`schoolYearId`) REFERENCES `SchoolYear`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `_SubjectToTeacher` ADD CONSTRAINT `_SubjectToTeacher_A_fkey` FOREIGN KEY (`A`) REFERENCES `Subject`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `_SubjectToTeacher` ADD CONSTRAINT `_SubjectToTeacher_B_fkey` FOREIGN KEY (`B`) REFERENCES `Teacher`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `_PeriodToSubject` ADD CONSTRAINT `_PeriodToSubject_A_fkey` FOREIGN KEY (`A`) REFERENCES `Period`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `_PeriodToSubject` ADD CONSTRAINT `_PeriodToSubject_B_fkey` FOREIGN KEY (`B`) REFERENCES `Subject`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
