@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   ClassSchema,
   ExamSchema,
+  FicheSchema,
   StudentSchema,
   SubjectSchema,
   TeacherSchema,
@@ -536,3 +537,46 @@ const { role, currentUserId } = await getUserSessionInfo();
     return { success: false, error: true };
   }
 };
+export const createFiche = async (
+  currentState: CurrentState,
+  data: FicheSchema
+): Promise<CurrentState> => {
+  try {
+    // Vérifie l'unicité de la combinaison
+    const existing = await prisma.fiche.findFirst({
+      where: {
+        classId: data.classId,
+        coursId: data.coursId,
+        periodId: data.periodId,
+        anneeId: data.anneeId,
+      },
+    });
+
+    if (existing) {
+      console.warn("Fiche déjà existante pour cette période et année");
+      return { success: false, error: true };
+    }
+
+    await prisma.fiche.create({
+      data: {
+        id: uuidv4(), // facultatif, si non auto-généré
+        classeName: data.classeName,
+        classId: data.classId,
+        coursId: data.coursId,
+        coursName: data.coursName,
+        periodeName: data.periodeName,
+        periodId: data.periodId,
+        anneeId: data.anneeId,
+        anneeName: data.anneeName,
+        notes: data.notes, // stocké en JSON
+      },
+    });
+
+    // revalidatePath("/list/fiches"); // à ajouter si tu as une liste côté page
+    return { success: true, error: false };
+  } catch (err) {
+    console.error("Erreur lors de la création de la fiche :", err);
+    return { success: false, error: true };
+  }
+};
+

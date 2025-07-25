@@ -112,6 +112,7 @@ model Subject {
   lessons  Lesson[]
   periods  Period[]
   marks    Mark[]
+  fiches Fiche[]
 }
 
 model Lesson {
@@ -144,6 +145,7 @@ model Class {
   fees          Fee[]
   supervisor    Teacher?       @relation(fields: [supervisorId], references: [id])
   grade         Grade          @relation(fields: [gradeId], references: [id])
+  fiches Fiche[]  // ✅ Relation inverse
 }
 
 model Grade {
@@ -243,6 +245,7 @@ model Period {
   subjects   Subject[]
   fees       Fee[]
   marks      Mark[]
+  fiches Fiche[]
 }
 
 model Fee {
@@ -292,3 +295,23 @@ model Mark {
 
   @@unique([studentId, subjectId, periodId, schoolYearId])
 }
+model Fiche {
+  id           String   @id @default(uuid())
+  dateCreated  DateTime @default(now())
+  dateUpdated  DateTime @updatedAt
+  classId      Int
+  class        Class    @relation(fields: [classId], references: [id])
+  coursId      Int
+  cours      Subject  @relation(fields: [coursId], references: [id])
+  coursName    String
+  classeName   String
+  periodId     Int
+  period       Period    @relation(fields: [periodId], references: [id])
+  periodeName  String
+  anneeId      Int
+  anneeName    String
+  notes        Json      // JSON object: [{ studentId, score, maxScore, subjectName }]
+
+  @@unique([classId, coursId, periodId, anneeId]) // ✅ Contrainte d'unicité composite
+}
+

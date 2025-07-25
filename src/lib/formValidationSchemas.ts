@@ -97,3 +97,26 @@ export const resultSchema = z.object({
 });
 
 export type ResultSchema = z.infer<typeof resultSchema>;
+
+export const NoteCotationSchema = z.object({
+  studentId: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  score: z.number(),
+  scoreMax: z.number(),
+});
+
+export const FicheSchema = z.object({
+  classeName: z.string(),
+  coursId: z.number(),
+  coursName: z.string(),
+  periodeName: z.string(),
+  periodId: z.number(),
+  classId: z.number(),
+  anneeId: z.number(),
+  anneeName: z.string(),
+  notes: z.array(NoteCotationSchema),
+});
+
+export type FicheSchema = z.infer<typeof FicheSchema>;
+
