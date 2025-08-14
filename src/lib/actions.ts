@@ -537,6 +537,87 @@ const { role, currentUserId } = await getUserSessionInfo();
     return { success: false, error: true };
   }
 };
+export const createLesson = async (
+  currentState: CurrentState,
+  data: SubjectSchema
+) => {
+  try {
+    // Vérifier que tous les enseignants existent dans la base
+    const existingTeachers = await prisma.teacher.findMany({
+      where: {
+    id: { in: data.teachers },  // filtre les enseignants dont l'id est dans data.teachers
+  },
+  select: { id: true },
+    });
+    console.log("Enseignants trouvés :", existingTeachers);
+    if (existingTeachers.length !== data.teachers.length) {
+      console.error("Un ou plusieurs enseignants sont introuvables.");
+      return { success: false, error: true };
+    }
+
+    await prisma.subject.create({
+      data: {
+        name: data.name,
+        teachers: {
+          connect: existingTeachers.map((teacher) => ({ id: teacher.id })),
+        },
+      },
+    });
+
+    // revalidatePath("/list/subjects");
+    return { success: true, error: false };
+  } catch (err) {
+    console.error(err);
+    return { success: false, error: true };
+  }
+};
+
+export const updateLesson = async (
+  currentState: CurrentState,
+  data: SubjectSchema
+) => {
+ 
+  try {
+    await prisma.subject.update({
+      where: {
+        id: data.id,
+      },
+      data: {
+        name: data.name,
+        teachers: {
+          set: data.teachers.map((teacherId) => ({ id: teacherId })),
+        },
+      },
+    });
+
+    return { success: true, error: false };
+  } catch (err) {
+    console.log(err);
+    return { success: false, error: true };
+  }
+};
+
+
+export const deleteLesson = async (
+  currentState: CurrentState,
+  data: FormData
+) => {
+  const id = data.get("id") as string;
+  try {
+    await prisma.subject.delete({
+      where: {
+        id: parseInt(id),
+      },
+    });
+
+    // revalidatePath("/list/subjects");
+    return { success: true, error: false };
+  } catch (err) {
+    console.log(err);
+    return { success: false, error: true };
+  }
+};
+
 export const createFiche = async (
   currentState: CurrentState,
   data: FicheSchema
@@ -571,6 +652,8 @@ export const createFiche = async (
         notes: data.notes, // stocké en JSON
       },
     });
+
+    
 
     // revalidatePath("/list/fiches"); // à ajouter si tu as une liste côté page
     return { success: true, error: false };
