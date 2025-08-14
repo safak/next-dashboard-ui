@@ -148,8 +148,11 @@ doc.setLineWidth(0.6);
 doc.rect(tableX, tableY, tableWidth, tableHeight);
 
 doc.rect(colPos[0], tableY, colWidths[0], rowHeightTotal);
+// FUSION : à droite de "Premier Semestre", une seule grande cellule
+const fusedX = colPos[2]; // Position de l’ancienne colonne "Second Semestre"
+const fusedWidth = colWidths[2] + colWidths[3] + colWidths[4]; // Fusion 3 colonnes
+doc.rect(fusedX, tableY, fusedWidth, rowHeightTotal);
 
-doc.rect(colPos[1], tableY, colWidths[1], premierSemTopHeight); // Cadre Premier semestre haut
 doc.rect(colPos[1], tableY + premierSemTopHeight, 40, premierSemMidHeight); // TR JOURN
 
 doc.rect(colPos[1], tableY + premierSemTopHeight + premierSemMidHeight, 20, premierSemBottomHeight); // 1erP
