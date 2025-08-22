@@ -24,6 +24,7 @@ import { signIn } from 'next-auth/react';
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { string } from "zod";
 
 export async function logout() {
   const cookieStore = await cookies();
@@ -181,7 +182,7 @@ export const createPayment = async (
 
     if (!fee) {
       console.error("Frais introuvable");
-      return { success: false, error: true , message: "Frais introuvable"};
+      return { success: false, error: true , errs: "Frais introuvable"};
     }
 
     // 3. Vérifier si l'étudiant a déjà tout payé
@@ -190,13 +191,13 @@ export const createPayment = async (
 
     if (remainingAmount <= 0) {
       console.warn("Frais déjà totalement payé.");
-      return { success: false, error: false,message: "Frais déjà totalement payé."};
+      return { success: false, error: false, errs: "Frais déjà totalement payé."};
     }
 
     // 4. Vérifier que le montant payé n'excède pas ce qui reste
     if (Number(data.amount)> remainingAmount) {
       console.warn("Montant payé supérieur à ce qu'il reste à payer.");
-      return { success: false, error: true , message: "Montant payé supérieur à ce qu'il reste à payer."};
+      return { success: false, error: true , errs: "Montant payé supérieur à ce qu'il reste à payer."};
     }
 
     // 5. Créer le paiement
@@ -210,11 +211,11 @@ export const createPayment = async (
       },
     });
 
-    return { success: true, error: false, message: "successfully sent" };
+    return { success: true, error: false, errs: "successfully sent" };
 
   } catch (err) {
     console.error("Erreur lors de la création du paiement:", err);
-    return { success: false, error: true,message: err};
+    return { success: false, error: true,errs: string};
   }
 };
 

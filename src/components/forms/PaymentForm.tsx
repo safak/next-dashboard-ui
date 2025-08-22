@@ -26,14 +26,17 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { string } from "zod";
 interface Fee {
   id: number;
   label: string;
   amount: number;
+  classId: number; // 👈 Add this
   period?: {
     label: string;
   };
 }
+
 // Exemple d’un paiement
 interface Payment {
   id: string;
@@ -41,7 +44,11 @@ interface Payment {
   feeId: number;
   amount: number;
 }
-
+type PaymentState = {
+  success: boolean;
+  error: boolean;
+  errs: string | ((...args: any[]) => any);
+};
 const PaymentForm = ({
   type,
   data,
@@ -87,7 +94,11 @@ const PaymentForm = ({
 
   const [date, setDate] = useState<Date | undefined>(new Date());
   const currentClass = classs.find((c: any) => c.id === watch("classId"));
-  const [state, setState] = useState({ success: false, error: false, message: "" });
+  const [state, setState] = useState<PaymentState>({
+    success: false,
+    error: false,
+    errs: "",
+  });
   const router = useRouter();
 
   const onSubmit = handleSubmit(async (formData) => {
@@ -97,7 +108,11 @@ const PaymentForm = ({
           ? await createPayment(state, { ...formData })
           : await createPayment(state, { ...formData });
 
-      setState({ success: result.success, error: result.error, message: result.message });
+      setState({
+        success: result.success,
+        error: result.error,
+        errs: result.errs,
+      });
 
       if (result.success) {
         toast(`Payment has been ${type === "create" ? "created" : "updated"}!`);
@@ -105,7 +120,7 @@ const PaymentForm = ({
         router.refresh();
       }
     } catch (error) {
-      setState({ success: false, error: true });
+      setState({ success: false, error: true, errs: "" });
     }
   });
   useEffect(() => {
@@ -163,12 +178,20 @@ const PaymentForm = ({
                 <SelectValue placeholder="Sélectionner un frais" />
               </SelectTrigger>
               <SelectContent>
-                {fees.map((f: Fee) => (
-                  <SelectItem key={f.id} value={f.id.toString()}>
-                    {f.label} - {f.period?.label ?? "Période inconnue"} ($
-                    {f.amount})
-                  </SelectItem>
-                ))}
+                {fees.filter((f: Fee) => f.classId === watch("classId")).length === 0 ? (
+  <SelectItem disabled value="">
+    Aucun frais disponible pour cette classe
+  </SelectItem>
+) : (
+  fees
+    .filter((f: Fee) => f.classId === watch("classId"))
+    .map((f: Fee) => (
+      <SelectItem key={f.id} value={f.id.toString()}>
+        {f.label} - {f.period?.label ?? "Période inconnue"} (${f.amount})
+      </SelectItem>
+    ))
+)}
+
               </SelectContent>
             </Select>
             {errors.feeId && (
@@ -296,8 +319,9 @@ const PaymentForm = ({
             <Textarea rows={3} />
           </div>
         </div>
-        {state?.error && 
-        <p className="text-red-600 text-sm">{state.error}</p>}
+        {typeof state.errs === "string" && (
+          <p className="text-red-600 text-sm">{state.errs}</p>
+        )}
         {/* Actions */}
         <div className="flex justify-end space-x-4 pt-4">
           <button className="btn-sm btn btn-warning" type="reset">
