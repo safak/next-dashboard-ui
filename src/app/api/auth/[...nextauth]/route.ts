@@ -3,44 +3,35 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { authConfig } from "../../../../lib/auth.config"; // Corrige si nécessaire
-import { dbConnection } from "@/lib/mysql";
+import prisma from "@/lib/prisma";
 
 async function getUserByEmail(email: string) {
-  try {
-    const [rows] = await dbConnection.query(
-      `SELECT 
-         user.id, 
-         user.name, 
-         user.email, 
-         user.password,
-         role.id AS roleId,
-         role.name AS roleName
-       FROM user
-       JOIN role ON user.roleId = role.id
-       WHERE user.email = ?
-       LIMIT 1`,
-      [email]
-    );
+  const user = await prisma.user.findUnique({
+    where: {
+      email: email,
+    },
+    include: {
+      role: true, // jointure vers la table "Role"
+    },
+  });
 
-    const result = (rows as any[])[0];
-    if (!result) return null;
+  if (!user) return null;
 
-    return {
-      id: result.id,
-      name: result.name,
-      email: result.email,
-      password: result.password,
-      roles: [{ id: result.roleId, name: result.roleName }],
-    };
-  } catch (error) {
-    console.error("[AUTH] Erreur MySQL:", error);
-    return null;
-  }
+  return {
+    id: user.id,
+    name: user.name ?? "", // ✅ éviter string | null pour TS
+    email: user.email,
+    password: user.password,
+    roles: [
+      {
+        id: user.role.id,
+        name: user.role.name,
+      },
+    ],
+  };
 }
 
 const handler = NextAuth({
-  ...authConfig,
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -64,8 +55,8 @@ const handler = NextAuth({
         const user = await getUserByEmail(email);
         if (!user) return null;
 
-        const passwordMatch = await bcrypt.compare(password, user.password);
-        if (!passwordMatch) return null;
+        const isValid = await bcrypt.compare(password, user.password);
+        if (!isValid) return null;
 
         const { password: _, ...safeUser } = user;
         return safeUser;
@@ -76,9 +67,9 @@ const handler = NextAuth({
     strategy: "jwt",
   },
   pages: {
-    signIn: "/login",       // <- page login personnalisée
-    error: "/login",        // <- en cas d'erreur
-    newUser: "/",           // <- rediriger les nouveaux
+    signIn: "/login",
+    error: "/login",
+    newUser: "/",
   },
   callbacks: {
     async jwt({ token, user }) {

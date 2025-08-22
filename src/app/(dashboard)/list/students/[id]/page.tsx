@@ -11,14 +11,34 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Clock, CheckCircle2, PlusCircle } from "lucide-react";
 
 const SingleStudentPage = async ({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) => {
+  const { role } = await getUserSessionInfo();
   const { id } = await params;
-
+ 
   // 🔒 Vérifie que l'utilisateur est authentifié et autorisé
   const session = await getUserSessionInfo();
   if (!session || session.role !== "admin") {
@@ -27,7 +47,7 @@ const SingleStudentPage = async ({
 
   const student:
     | (Student & {
-        class: (Class & { _count: { lessons: number } });
+        class: Class & { _count: { lessons: number } };
       })
     | null = await prisma.student.findUnique({
     where: { id },
@@ -47,7 +67,21 @@ const SingleStudentPage = async ({
   if (!student) {
     return notFound();
   }
-
+  const data = await prisma.payment.findMany({
+    where: {
+      studentId: student.id, // facultatif si tu veux filtrer
+    },
+    include: {
+      student: true,
+      fee: {
+        include: {
+          period: true,
+        },
+      },
+    },
+  });
+  const totalPaye = data.reduce((acc, payment) => acc + payment.amount, 0);
+  const totalAPayer = data.reduce((acc, payment) => acc + (payment.fee?.amount || 0), 0);
   return (
     <div className="flex-1 p-4 flex flex-col gap-4 xl:flex-row">
       {/* LEFT */}
@@ -77,23 +111,45 @@ const SingleStudentPage = async ({
               </p>
               <div className="flex items-center justify-between gap-2 flex-wrap text-xs font-medium">
                 <div className="w-full md:w-1/3 flex items-center gap-2">
-                  <Image src="/uploads/blood.png" alt="" width={14} height={14} />
+                  <Image
+                    src="/uploads/blood.png"
+                    alt=""
+                    width={14}
+                    height={14}
+                  />
                   <span>{student.bloodType || "-"}</span>
                 </div>
                 <div className="w-full md:w-1/3 flex items-center gap-2">
-                  <Image src="/uploads/date.png" alt="" width={14} height={14} />
+                  <Image
+                    src="/uploads/date.png"
+                    alt=""
+                    width={14}
+                    height={14}
+                  />
                   <span>
                     {student.birthday
-                      ? new Intl.DateTimeFormat("en-GB").format(student.birthday)
+                      ? new Intl.DateTimeFormat("en-GB").format(
+                          student.birthday
+                        )
                       : "-"}
                   </span>
                 </div>
                 <div className="w-full md:w-1/3 flex items-center gap-2">
-                  <Image src="/uploads/mail.png" alt="" width={14} height={14} />
+                  <Image
+                    src="/uploads/mail.png"
+                    alt=""
+                    width={14}
+                    height={14}
+                  />
                   <span>{student.email || "-"}</span>
                 </div>
                 <div className="w-full md:w-1/3 flex items-center gap-2">
-                  <Image src="/uploads/phone.png" alt="" width={14} height={14} />
+                  <Image
+                    src="/uploads/phone.png"
+                    alt=""
+                    width={14}
+                    height={14}
+                  />
                   <span>{student.phone || "-"}</span>
                 </div>
               </div>
@@ -207,6 +263,64 @@ const SingleStudentPage = async ({
             </Link>
           </div>
         </div>
+        {role === "admin" && 
+        <div className="bg-white p-4 rounded-md ">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-semibold">Détails des Paiements</h1>
+
+        {/* Bouton "Add Payment" */}
+        <FormContainer type="create" table="payment" data={student}/>
+      </div>
+
+      <Table>
+        <TableCaption>Liste des paiements récents</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[100px]">Période</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Payé</TableHead>
+            <TableHead className="text-right">À payer</TableHead>
+          </TableRow>
+        </TableHeader>
+
+        <TableBody>
+          {data.map((payment) => {
+            const paid = payment.amount;
+            const due = payment.fee?.amount || 0;
+            const periodLabel = payment.fee?.period?.label || "-";
+            const isSolde = paid >= due;
+
+            return (
+              <TableRow key={payment.id}>
+                <TableCell className="font-medium">{periodLabel}</TableCell>
+                <TableCell>
+                  {isSolde ? (
+                    <CheckCircle2 className="text-green-500 w-5 h-5" />
+                  ) : (
+                    <Clock className="text-yellow-500 w-5 h-5" />
+                  )}
+                </TableCell>
+                <TableCell className="text-right">${paid.toFixed(2)}</TableCell>
+                <TableCell className="text-right">${due.toFixed(2)}</TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+
+        <TableFooter>
+          <TableRow>
+            <TableCell colSpan={2}>Total</TableCell>
+            <TableCell className="text-right font-bold">
+              ${totalPaye.toFixed(2)}
+            </TableCell>
+            <TableCell className="text-right font-bold">
+              ${totalAPayer.toFixed(2)}
+            </TableCell>
+          </TableRow>
+        </TableFooter>
+      </Table>
+    </div>
+        }
         <Performance />
         <Announcements />
       </div>

@@ -4,30 +4,35 @@ import type { NextAuthOptions, User } from "next-auth";
 import { getServerSession } from "next-auth/next";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { dbConnection } from "./mysql";
+import prisma from "./prisma";
 
 // ✅ Fonction pour récupérer un utilisateur depuis MySQL
 async function getUserByEmail(email: string) {
-  const [rows] = await dbConnection.query(
-    `SELECT user.id, user.name, user.email, user.password, role.id AS roleId, role.name AS roleName
-     FROM user
-     JOIN role ON user.roleId = role.id
-     WHERE user.email = ?
-     LIMIT 1`,
-    [email]
-  );
+  const user = await prisma.user.findUnique({
+    where: {
+      email: email,
+    },
+    include: {
+      role: true, // jointure vers la table "Role"
+    },
+  });
 
-  const result = (rows as any[])[0];
-  if (!result) return null;
+  if (!user) return null;
 
   return {
-    id: result.id,
-    name: result.name,
-    email: result.email,
-    password: result.password,
-    roles: [{ id: result.roleId, name: result.roleName }],
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    password: user.password,
+    roles: [
+      {
+        id: user.role.id,
+        name: user.role.name,
+      },
+    ],
   };
 }
+
 
 // ✅ Configuration NextAuth
 export const authOptions: NextAuthOptions = {

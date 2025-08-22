@@ -15,6 +15,7 @@ export type FormContainerProps = {
     | "result"
     | "attendance"
     | "event"
+    | "payment"
     | "announcement";
   type: "create" | "update" | "delete";
   data?: any;
@@ -32,6 +33,54 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
         });
         
         relatedData = { teachers: subjectTeachers };
+
+        break;
+       case "payment":
+  if (!data?.id) break; // sécurité si pas d'étudiant
+
+  // 1. Paiements du student
+  const studentPayments = await prisma.payment.findMany({
+    where: { studentId: data.id },
+    include: {
+      fee: {
+        include: {
+          period: true,
+        },
+      },
+    },
+  });
+
+  // 2. Classe du student
+  const studentClass = await prisma.class.findFirst({
+    where: {
+      students: {
+        some: {
+          id: data.id,
+        },
+      },
+    },
+    include: {
+      _count: {
+        select: {
+          students: true,
+        },
+      },
+    },
+  });
+// 3. Liste des frais (fees) disponibles
+  const paymentFees = await prisma.fee.findMany({
+    include: {
+      period: true,
+    },
+  });
+
+  relatedData = {
+    payments: studentPayments,
+    classs: studentClass ? [studentClass] : [],
+    fees: paymentFees,
+  };
+  break;
+
 
         break;
          case "lesson":

@@ -15,6 +15,7 @@ const deleteActionMap = {
   teacher: deleteTeacher,
   student: deleteStudent,
   exam: deleteExam,
+  payment: deleteSubject,
 // TODO: OTHER DELETE ACTIONS
   parent: deleteSubject,
   lesson: deleteSubject,
@@ -23,7 +24,7 @@ const deleteActionMap = {
   attendance: deleteSubject,
   event: deleteSubject,
   announcement: deleteSubject,
-};
+ } as const;
 
 const TeacherForm = dynamic(() => import("./forms/TeacherForm"), {
   loading: () => <h1>Loading...</h1>,
@@ -47,6 +48,9 @@ const ResultForm = dynamic(() => import("./forms/ResultForm"), {
   loading: () => <h1>Loading...</h1>,
 });
 const LessonForm = dynamic(() => import("./forms/LessonForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const PaymentForm = dynamic(() => import("./forms/PaymentForm"), {
   loading: () => <h1>Loading...</h1>,
 });
 
@@ -116,6 +120,14 @@ const forms: {
       relatedData={relatedData}
     />
   ), 
+  payment: (setOpen, type, data, relatedData) => (
+    <PaymentForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData}
+    />
+  ), 
 };
 const FormModal = ({
   table,
@@ -134,18 +146,23 @@ const FormModal = ({
 
   const [open, setOpen] = useState(false);
    const Form = () => {
-    const [state, formAction] = useActionState(deleteActionMap[table], {success:false,error:false});
-    
-      // ✅ Ajout ici : submit a
+   const deleteAction = deleteActionMap[table];
+
+    const [state, formAction] = useActionState(
+      deleteAction ?? (() => ({ success: false, error: true })),
+      { success: false, error: false }
+    );
+
       const router = useRouter();
     
-      useEffect(() => {
-        if (state.success) {
-          toast(`Subject has been deleted !`);
-          setOpen(false);
-          router.refresh();
-        }
-      }, [state.success, type]);
+ useEffect(() => {
+  if (state.success) {
+    toast(`${table} has been deleted !`);
+    setOpen(false);
+    router.refresh();
+  }
+}, [state.success, router]);
+
      
       
     return type === "delete" && id ? 

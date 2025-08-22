@@ -6,6 +6,7 @@ import {
   ClassSchema,
   ExamSchema,
   FicheSchema,
+  PaymentSchema,
   StudentSchema,
   SubjectSchema,
   TeacherSchema,
@@ -137,6 +138,114 @@ export const updateSubject = async (
 
 
 export const deleteSubject = async (
+  currentState: CurrentState,
+  data: FormData
+) => {
+  const id = data.get("id") as string;
+  try {
+    await prisma.subject.delete({
+      where: {
+        id: parseInt(id),
+      },
+    });
+
+    // revalidatePath("/list/subjects");
+    return { success: true, error: false };
+  } catch (err) {
+    console.log(err);
+    return { success: false, error: true };
+  }
+};
+export const createPayment = async (
+  currentState: CurrentState,
+  data: PaymentSchema
+) => {
+  try {
+    // 1. Récupérer le montant total payé pour ce student + fee
+    const existingPayments = await prisma.payment.aggregate({
+      where: {
+        studentId: data.studentId,
+        feeId: data.feeId,
+      },
+      _sum: {
+        amount: true,
+      },
+    });
+
+    const alreadyPaid = existingPayments._sum.amount || 0;
+
+    // 2. Récupérer le montant total requis pour ce fee
+    const fee = await prisma.fee.findUnique({
+      where: { id: data.feeId },
+    });
+
+    if (!fee) {
+      console.error("Frais introuvable");
+      return { success: false, error: true , message: "Frais introuvable"};
+    }
+
+    // 3. Vérifier si l'étudiant a déjà tout payé
+    const totalDue = fee.amount;
+    const remainingAmount = totalDue - alreadyPaid;
+
+    if (remainingAmount <= 0) {
+      console.warn("Frais déjà totalement payé.");
+      return { success: false, error: false,message: "Frais déjà totalement payé."};
+    }
+
+    // 4. Vérifier que le montant payé n'excède pas ce qui reste
+    if (Number(data.amount)> remainingAmount) {
+      console.warn("Montant payé supérieur à ce qu'il reste à payer.");
+      return { success: false, error: true , message: "Montant payé supérieur à ce qu'il reste à payer."};
+    }
+
+    // 5. Créer le paiement
+    await prisma.payment.create({
+      data: {
+        studentId: data.id, // <-- assure-toi que c'est bien l'ID d’un student (string)
+        feeId: data.feeId,
+       amount: Number(data.amount_),
+       date: data.date && data.date !== '' ? new Date(data.date) : new Date(),
+        schoolYearId: data.schoolYearId ?? null,
+      },
+    });
+
+    return { success: true, error: false, message: "successfully sent" };
+
+  } catch (err) {
+    console.error("Erreur lors de la création du paiement:", err);
+    return { success: false, error: true,message: err};
+  }
+};
+
+
+/* export const updatePayment = async (
+  currentState: CurrentState,
+  data: PaymentSchema
+) => {
+ 
+  try {
+    await prisma.subject.update({
+      where: {
+        id: data.id,
+      },
+      data: {
+        name: data.name,
+        teachers: {
+          set: data.teachers.map((teacherId) => ({ id: teacherId })),
+        },
+      },
+    });
+
+    return { success: true, error: false };
+  } catch (err) {
+    console.log(err);
+    return { success: false, error: true };
+  }
+}; */
+
+
+export const deletePayment = async (
   currentState: CurrentState,
   data: FormData
 ) => {

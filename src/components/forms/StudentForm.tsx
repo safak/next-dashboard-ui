@@ -205,28 +205,28 @@ const StudentForm = ({
         </div>
 
         <div className="flex flex-col gap-2 w-full md:w-1/4">
-         <ReactSelectField
-  name="gradeId"
-  label="Grade"
-  options={grades.map((grade: any) => ({
-    value: grade.id,
-    label: grade.label,
-  }))}
-  control={control}
-  error={normalizeError(errors.gradeId)}
-/>
+          <ReactSelectField
+            name="gradeId"
+            label="Grade"
+            options={grades.map((grade: any) => ({
+              value: grade.id,
+              label: grade.label,
+            }))}
+            control={control}
+            error={normalizeError(errors.gradeId)}
+          />
         </div>
         <div className="flex flex-col gap-2 w-full md:w-1/4">
           <ReactSelectField
-  name="classId"
-  label="Class"
-  options={classes.map((classItem: any) => ({
-    value: classItem.id,
-    label: `${classItem.name} - ${classItem._count.students}/${classItem.capacity} capacity`,
-  }))}
-  control={control}
-  error={normalizeError(errors.classId)}
-/>
+            name="classId"
+            label="Class"
+            options={classes.map((classItem: any) => ({
+              value: classItem.id,
+              label: `${classItem.name} - ${classItem._count.students}/${classItem.capacity} capacity`,
+            }))}
+            control={control}
+            error={normalizeError(errors.classId)}
+          />
         </div>
       </div>
       {state.error && (

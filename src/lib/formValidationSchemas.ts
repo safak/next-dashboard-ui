@@ -90,6 +90,24 @@ export const studentSchema = z.object({
 
 export type StudentSchema = z.infer<typeof studentSchema>;
 
+export const paymentSchema = z.object({
+  id: z.coerce.string().min(1, "Le frais est requis"),
+  studentId:  z.coerce.string().optional(),
+  feeId: z.coerce.number().min(1, "Le frais est requis"),
+  schoolYearId: z.number().optional().nullable(), // champ facultatif
+  amount: z.number().optional(),
+  amount_: z.number().min(0, "Le montant doit être positif"),
+  date: z.coerce.string({ message: "Birthday is required!" }),
+  username: z
+    .string().optional(),
+  name: z.string().optional(),
+  surname: z.string().optional(),
+  classId: z.coerce.number().min(1, { message: "Class is required!" }),
+  label: z.string().optional(),
+});
+
+export type PaymentSchema = z.infer<typeof paymentSchema>;
+
 export const examSchema = z.object({
   id: z.coerce.number().optional(),
   title: z.string().min(1, { message: "Title name is required!" }),
