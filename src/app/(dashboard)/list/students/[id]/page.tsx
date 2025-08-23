@@ -1,0 +1,331 @@
+import Announcements from "@/components/Announcements";
+import BigCalendarContainer from "@/components/BigCalendarContainer";
+import FormContainer from "@/components/FormContainer";
+import Performance from "@/components/Performance";
+import StudentAttendanceCard from "@/components/StudentAttendanceCard";
+import prisma from "@/lib/prisma";
+import { normalizeImageSrc } from "@/lib/utils";
+import { getUserSessionInfo } from "@/lib/session";
+import { Class, Student } from "@prisma/client";
+import Image from "next/image";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Clock, CheckCircle2, PlusCircle } from "lucide-react";
+
+const SingleStudentPage = async ({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) => {
+  const { role } = await getUserSessionInfo();
+  const { id } = await params;
+ 
+  // 🔒 Vérifie que l'utilisateur est authentifié et autorisé
+  const session = await getUserSessionInfo();
+  if (!session || session.role !== "admin") {
+    return notFound();
+  }
+
+  const student:
+    | (Student & {
+        class: Class & { _count: { lessons: number } };
+      })
+    | null = await prisma.student.findUnique({
+    where: { id },
+    include: {
+      class: {
+        include: {
+          _count: {
+            select: {
+              lessons: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!student) {
+    return notFound();
+  }
+  const data = await prisma.payment.findMany({
+    where: {
+      studentId: student.id, // facultatif si tu veux filtrer
+    },
+    include: {
+      student: true,
+      fee: {
+        include: {
+          period: true,
+        },
+      },
+    },
+  });
+  const totalPaye = data.reduce((acc, payment) => acc + payment.amount, 0);
+  const totalAPayer = data.reduce((acc, payment) => acc + (payment.fee?.amount || 0), 0);
+  return (
+    <div className="flex-1 p-4 flex flex-col gap-4 xl:flex-row">
+      {/* LEFT */}
+      <div className="w-full xl:w-2/3">
+        {/* TOP */}
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* USER INFO CARD */}
+          <div className="bg-kalasaSky py-6 px-4 rounded-md flex-1 flex gap-4">
+            <div className="w-1/3">
+              <Image
+                src={normalizeImageSrc(student.img)}
+                alt=""
+                width={144}
+                height={144}
+                className="w-36 h-36 rounded-full object-cover"
+              />
+            </div>
+            <div className="w-2/3 flex flex-col justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <h1 className="text-xl font-semibold">
+                  {student.name + " " + student.surname}
+                </h1>
+                <FormContainer table="student" type="update" data={student} />
+              </div>
+              <p className="text-sm text-gray-500">
+                Lorem ipsum, dolor sit amet consectetur adipisicing elit.
+              </p>
+              <div className="flex items-center justify-between gap-2 flex-wrap text-xs font-medium">
+                <div className="w-full md:w-1/3 flex items-center gap-2">
+                  <Image
+                    src="/uploads/blood.png"
+                    alt=""
+                    width={14}
+                    height={14}
+                  />
+                  <span>{student.bloodType || "-"}</span>
+                </div>
+                <div className="w-full md:w-1/3 flex items-center gap-2">
+                  <Image
+                    src="/uploads/date.png"
+                    alt=""
+                    width={14}
+                    height={14}
+                  />
+                  <span>
+                    {student.birthday
+                      ? new Intl.DateTimeFormat("en-GB").format(
+                          student.birthday
+                        )
+                      : "-"}
+                  </span>
+                </div>
+                <div className="w-full md:w-1/3 flex items-center gap-2">
+                  <Image
+                    src="/uploads/mail.png"
+                    alt=""
+                    width={14}
+                    height={14}
+                  />
+                  <span>{student.email || "-"}</span>
+                </div>
+                <div className="w-full md:w-1/3 flex items-center gap-2">
+                  <Image
+                    src="/uploads/phone.png"
+                    alt=""
+                    width={14}
+                    height={14}
+                  />
+                  <span>{student.phone || "-"}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SMALL CARDS */}
+          <div className="flex-1 flex gap-4 justify-between flex-wrap">
+            <div className="bg-white p-4 rounded-md flex gap-4 w-full md:w-[48%]">
+              <Image
+                src="/uploads/singleAttendance.png"
+                alt=""
+                width={24}
+                height={24}
+                className="w-6 h-6"
+              />
+              <Suspense fallback="loading...">
+                <StudentAttendanceCard id={student.id} />
+              </Suspense>
+            </div>
+
+            <div className="bg-white p-4 rounded-md flex gap-4 w-full md:w-[48%]">
+              <Image
+                src="/uploads/singleBranch.png"
+                alt=""
+                width={24}
+                height={24}
+                className="w-6 h-6"
+              />
+              <div>
+                <h1 className="text-xl font-semibold">
+                  {student.class.name.charAt(0)}th
+                </h1>
+                <span className="text-sm text-gray-400">Branches</span>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-md flex gap-4 w-full md:w-[48%]">
+              <Image
+                src="/uploads/singleLesson.png"
+                alt=""
+                width={24}
+                height={24}
+                className="w-6 h-6"
+              />
+              <div>
+                <h1 className="text-xl font-semibold">
+                  {student.class._count.lessons}
+                </h1>
+                <span className="text-sm text-gray-400">Lessons</span>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-md flex gap-4 w-full md:w-[48%]">
+              <Image
+                src="/uploads/singleClass.png"
+                alt=""
+                width={24}
+                height={24}
+                className="w-6 h-6"
+              />
+              <div>
+                <h1 className="text-xl font-semibold">{student.class.name}</h1>
+                <span className="text-sm text-gray-400">Classes</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* BOTTOM */}
+        <div className="mt-4 bg-white rounded-md p-4 h-[800px]">
+          <h1>Student&apos;s Schedule</h1>
+          <BigCalendarContainer type="classId" id={student.class.id} />
+        </div>
+      </div>
+
+      {/* RIGHT */}
+      <div className="w-full xl:w-1/3 flex flex-col gap-4">
+        <div className="bg-white p-4 rounded-md">
+          <h1 className="text-xl font-semibold">Shortcuts</h1>
+          <div className="mt-4 flex gap-4 flex-wrap text-xs text-gray-500">
+            <Link
+              className="p-3 rounded-md bg-kalasaSky"
+              href={`/list/classes?supervisorId=${student.id}`}
+            >
+              Student&apos;s Classes
+            </Link>
+            <Link
+              className="p-3 rounded-md bg-kalasaPurpleLight"
+              href={`/list/students?studentId=${student.id}`}
+            >
+              Student&apos;s Teachers
+            </Link>
+            <Link
+              className="p-3 rounded-md bg-kalasaYellowLight"
+              href={`/list/lessons?studentId=${student.id}`}
+            >
+              Student&apos;s Lessons
+            </Link>
+            <Link
+              className="p-3 rounded-md bg-pink-50"
+              href={`/list/exams?studentId=${student.id}`}
+            >
+              Student&apos;s Results
+            </Link>
+            <Link
+              className="p-3 rounded-md bg-kalasaSky"
+              href={`/list/assignments?studentId=${student.id}`}
+            >
+              Student&apos;s Assignments
+            </Link>
+          </div>
+        </div>
+        {role === "admin" && 
+        <div className="bg-white p-4 rounded-md ">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-semibold">Détails des Paiements</h1>
+
+        {/* Bouton "Add Payment" */}
+        <FormContainer type="create" table="payment" data={student}/>
+      </div>
+
+      <Table>
+        <TableCaption>Liste des paiements récents</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[100px]">Période</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Payé</TableHead>
+            <TableHead className="text-right">À payer</TableHead>
+          </TableRow>
+        </TableHeader>
+
+        <TableBody>
+          {data.map((payment) => {
+            const paid = payment.amount;
+            const due = payment.fee?.amount || 0;
+            const periodLabel = payment.fee?.period?.label || "-";
+            const isSolde = paid >= due;
+
+            return (
+              <TableRow key={payment.id}>
+                <TableCell className="font-medium">{periodLabel}</TableCell>
+                <TableCell>
+                  {isSolde ? (
+                    <CheckCircle2 className="text-green-500 w-5 h-5" />
+                  ) : (
+                    <Clock className="text-yellow-500 w-5 h-5" />
+                  )}
+                </TableCell>
+                <TableCell className="text-right">${paid.toFixed(2)}</TableCell>
+                <TableCell className="text-right">${due.toFixed(2)}</TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+
+        <TableFooter>
+          <TableRow>
+            <TableCell colSpan={2}>Total</TableCell>
+            <TableCell className="text-right font-bold">
+              ${totalPaye.toFixed(2)}
+            </TableCell>
+            <TableCell className="text-right font-bold">
+              ${totalAPayer.toFixed(2)}
+            </TableCell>
+          </TableRow>
+        </TableFooter>
+      </Table>
+    </div>
+        }
+        <Performance />
+        <Announcements />
+      </div>
+    </div>
+  );
+};
+
+export default SingleStudentPage;
