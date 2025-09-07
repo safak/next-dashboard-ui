@@ -19,4 +19,9 @@ export default function RootLayout({
       <body className={inter.className}>{children}</body>
     </html>
   );
+
 }
+
+
+
+//SING_IN FOLDER create karni hai 
