@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # --- Service 1: Your Next.js App ---
+  web:
+    build: .
+    container_name: muic_dashboard_web
+    ports:
+      - '3000:3000'
+    environment:
+      # Notice the hostname is 'db', not 'localhost'
+      - DATABASE_URL=postgresql://postgres:university_secure_password@db:5432/muic_db?schema=public
+      - DIRECT_URL=postgresql://postgres:university_secure_password@db:5432/muic_db?schema=public
+      # Pass your API key here
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    depends_on:
+      - db
+    restart: always
+
+  # --- Service 2: PostgreSQL Database ---
+  db:
+    image: postgres:15-alpine
+    container_name: muic_dashboard_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: university_secure_password
+      POSTGRES_DB: muic_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  postgres_data:

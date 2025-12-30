@@ -1,26 +1,34 @@
-# Lama Dev School Management Dashboard
+MUIC Social Listening Dashboard - Deployment Instructions
 
-## Getting Started
+PREREQUISITES:
 
-First, run the development server:
+- Docker Desktop must be installed and running.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+STEP 1: SETUP ENVIRONMENT
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. Unzip the project folder.
+2. Create a file named ".env" in the root folder.
+3. Add these lines to the .env file:
+   DATABASE_URL="postgresql://postgres:password@db:5432/muic_db?schema=public"
+   DIRECT_URL="postgresql://postgres:password@db:5432/muic_db?schema=public"
+   GOOGLE_API_KEY="[Insert Your Google API Key Here]"
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+STEP 2: START THE APP
 
-## Learn More
+1. Open a terminal in the project folder.
+2. Run the command:
+   docker compose up -d --build
 
-To learn more about Next.js, take a look at the following resources:
+   (Wait for the containers "muic_dashboard_web" and "muic_dashboard_db" to start).
 
-- [Lama Dev Youtube Channel](https://youtube.com/lamadev) 
-- [Next.js](https://nextjs.org/learn)
+STEP 3: LOAD THE DATA (CRITICAL)
+The database starts empty. You must run this command to load the 91 Posts and Comments from the CSV files:
+
+docker exec -it muic_dashboard_web npm run load-data
+
+(Wait for the success message: "Successfully inserted 91 posts" and "Successfully inserted comments").
+
+STEP 4: ACCESS THE DASHBOARD
+
+1. Open your browser to: http://localhost:3000
+2. The dashboard should now display all posts, content, and sentiment analysis.

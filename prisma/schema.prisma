@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Model for your app's users (e.g., "VZA Admin")
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  name      String?
+  role      String    @default("user") // "admin" or "user"
+  createdAt DateTime  @default(now())
+  
+  // Relation: Each user can create and track many keywords
+  // keywords  Keyword[]
+}
+
+// Model for the keywords you want to track (from your "Keyword Tracker" page)
+model Keyword {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique // The keyword text, e.g., "MUIC"
+  type      String    // "Main" or "Sub"
+  createdAt DateTime  @default(now())
+  
+  // Relation: Which user does this keyword belong to?
+  //user      User      @relation(fields: [userId], references: [id])
+  //userId    Int
+  
+  // Relation: A keyword can be found in many posts (Many-to-Many)
+  posts     Post[]
+}
+
+// Model for the social media posts you collect
+model Post {
+  id              String    @id // The "post_id" from the JSON (e.g., "1447418488835258_...")
+  platform        String    // e.g., "Facebook", "Twitter"
+  content         String    @db.Text
+  createdAt       DateTime  // The "created_time" from the JSON
+  permalink       String
+  reactionsCount  Int
+  sharesCount     Int
+  commentsCount   Int
+  
+  // The category of the main post, analyzed by your app
+  category       String?   // e.g., "Event", "Warning annoucements"
+  sentiment      String?
+  // Relation: A post has many comments (One-to-Many)
+  comments        Comment[]
+  
+  // Relation: A post can contain many keywords (Many-to-Many)
+  keywords        Keyword[]
+}
+
+// Model for the comments on a post
+model Comment {
+  id           String    @id // The "comment_id" from the JSON
+  message      String    @db.Text
+  createdAt    DateTime  // The "created_time" from the JSON
+  likeCount    Int
+  replyCount   Int
+  
+  // The category of the comment, analyzed by your app
+  sentiment   String?   // e.g. "Positive", "Negative"
+  category    String?   // "Positive", "Neutral", "Negative"
+  
+  // Relation: Each comment belongs to one post
+  post         Post      @relation(fields: [postId], references: [id])
+  postId       String
+  
+  // Relation: Each comment is written by one author (optional)
+  author       Author?   @relation(fields: [authorId], references: [id])
+  authorId     String?
+}
+
+// Model for the author of a comment (the "from" object)
+model Author {
+  id       String    @id // The platform-specific user ID (e.g., "7186967201339991")
+  name     String
+  
+  // Relation: An author can write many comments
+  comments Comment[]
+}

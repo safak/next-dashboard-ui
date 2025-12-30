@@ -35,3 +35,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+# Data files
+facebook_data.json
+merged_facebook_sentiment_results.csv
+Comment_rows.csv
