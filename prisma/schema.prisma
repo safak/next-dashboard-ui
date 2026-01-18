@@ -1,0 +1,223 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Academy {
+  id              Int      @id @default(autoincrement())
+  academyName     String
+  academyLogo     String?
+  academyOwnerId  String
+  academyIsActive Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  Member          Member?  @relation(fields: [memberId], references: [id])
+  memberId        String?
+}
+
+model Admin {
+  id        String @id
+  latest002 String @default("003")
+  username  String @unique
+  email     String @unique
+}
+
+/**
+ * model Profile {
+ * id           String     @id @default(cuid())
+ * name         String
+ * surname      String
+ * email        String?    @unique
+ * phone        String?
+ * address      String?
+ * img          String?
+ * bloodType    BloodType?
+ * isBloodDonor Boolean?   @default(false)
+ * sex          MemberSex?
+ * createdAt    DateTime   @default(now())
+ * updatedAt    DateTime   @updatedAt
+ * belt Belt[]
+ * //1 to 1 relationship with a member
+ * memberId String? @unique
+ * member   Member? @relation(fields: [memberId], references: [id])
+ * //1 to 1 relationship with a parent
+ * parentId String? @unique
+ * parent   Parent? @relation(fields: [parentId], references: [id])
+ * instructorId String?     @unique
+ * instructor   Instructor? @relation(fields: [instructorId], references: [id])
+ * certifications Certifications[]
+ * }
+ */
+
+model Member {
+  id           String     @id @default(cuid())
+  username     String     @unique
+  firebaseId   String?
+  name         String
+  surname      String
+  email        String?    @unique
+  phone        String?
+  address      String?
+  img          String?
+  bloodType    BloodType?
+  isBloodDonor Boolean?   @default(false)
+  sex          MemberSex?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  belt          Belt[]
+  certification Certifications[]
+  memberMetrics MemberMetrics[]
+  parent        Parent[]
+  academy       Academy[]
+}
+
+model MemberMetrics {
+  id          String   @id @default(cuid())
+  weight      Float
+  height      Float
+  dateofentry DateTime @default(now())
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id])
+}
+
+model Parent {
+  id       String @id @default(cuid())
+  username String @unique
+
+  name         String
+  surname      String
+  email        String?    @unique
+  phone        String?
+  address      String?
+  img          String?
+  bloodType    BloodType?
+  isBloodDonor Boolean?   @default(false)
+  sex          MemberSex?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id])
+}
+
+model Instructor {
+  id           String     @id @default(cuid())
+  username     String     @unique
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  name         String
+  surname      String
+  email        String?    @unique
+  phone        String?
+  address      String?
+  img          String?
+  bloodType    BloodType?
+  isBloodDonor Boolean?   @default(false)
+  sex          MemberSex?
+
+  disciplines MartialArtsDiscipline[]
+  Belt        Belt[]
+}
+
+model Class {
+  id               Int      @id @default(autoincrement())
+  className        String
+  classDescription String
+  capacity         Int
+  day              Day
+  startTime        String
+  endTime          String
+}
+
+model MartialArtsDiscipline {
+  id             String       @id @default(cuid())
+  artName        String
+  artDescription String
+  belts          Belt[]
+  instructor     Instructor[]
+}
+
+model Belt {
+  id                      String                @id @default(cuid())
+  beltName                String
+  martialArtsDisciplineId String
+  martialArtsDiscipline   MartialArtsDiscipline @relation(fields: [martialArtsDisciplineId], references: [id])
+
+  instructorID String
+  instructor   Instructor @relation(fields: [instructorID], references: [id])
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id])
+}
+
+model Certifications {
+  id              String     @id @default(cuid())
+  certName        String
+  certDescription String
+  certCircle      Itteration
+
+  memberId String @unique
+  member   Member @relation(fields: [memberId], references: [id])
+}
+
+model Announcements {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  date        DateTime
+}
+
+model Events {
+  id          Int      @id @default(autoincrement())
+  startTime   DateTime
+  endTime     DateTime
+  title       String
+  description String
+}
+
+enum MemberSex {
+  MALE
+  FEMALE
+}
+
+enum Itteration {
+  MONTHLY
+  QUARTERLY
+  SEMESTERLY
+  ANNUALY
+  PERPETUALLY
+}
+
+enum Day {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum BloodType {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+}

@@ -13,6 +13,17 @@ const config: Config = {
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
+      colors:{
+        zeidSky:"#C3EBFA",
+        zeidSkyLight:"#EDF9FD",
+        zeidPurple:"#CFCEFF",
+        zeidPurpleLight:"#F1F0FF",
+        zeidYellow:"#FAE27C",
+        zeidYellowLight:"#FEFCE8",
+        zeidBlue:"#302780",
+        zeidBlueLight:"#7e57eb",
+        zeidPink:"#de7ed6",
+      }
     },
   },
   plugins: [],
