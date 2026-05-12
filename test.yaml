@@ -1,0 +1,20 @@
+# My First Yaml Practice
+
+Africa:
+ West Africa:
+   - Nigeria:
+       Abuja: 8.9
+       Lagos: 17
+       Rivers: 14
+   - Cameroon: 80
+   - Ghana: 30
+   - Niger: 10
+
+ North Africa:
+   - Libya: 14
+   - Egypt: 70
+
+ South Africa:
+
+ East Africa:
+
