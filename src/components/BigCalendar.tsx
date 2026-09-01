@@ -45,9 +45,10 @@ const BigCalendar = () => {
         view={view}
         style={{ height: "100%" }}
         onView={handleOnChangeView}
+        defaultDate={new Date(2026, 7, 24)}
         // min and max MUST have the exact same Year, Month, and Day to lock the grid mathematically
-        min={new Date(2026, 7, 24, 8, 0, 0)}
-        max={new Date(2026, 7, 24, 17, 0, 0)}
+        min={new Date(2026, 7, 1, 8, 0, 0)}
+        max={new Date(2026, 7, 1, 17, 0, 0)}
       />
     </div>
   )
