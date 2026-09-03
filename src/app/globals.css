@@ -1,3 +1,156 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* --- REACT CALENDAR (SIDEBAR CALENDAR) --- */
+.react-calendar {
+  width: 100% !important;
+  border: none !important;
+  font-family: "Inter", sans-serif !important;
+}
+
+.react-calendar__navigation__label__labelText {
+  font-weight: 600;
+}
+
+.react-calendar__tile--active {
+  background-color: #c3ebfa !important;
+  color: black !important;
+}
+
+/* --- REACT BIG CALENDAR (MAIN SCHEDULE) --- */
+.rbc-btn-group:first-child {
+  display: none !important;
+}
+
+.rbc-toolbar-label {
+  text-align: right !important;
+  padding: 0px 20px !important;
+}
+
+.rbc-btn-group:last-child {
+  font-size: 13px !important;
+}
+
+.rbc-btn-group:last-child button {
+  border: none !important;
+  background-color: #f1f0ff !important;
+  margin-left: 2px !important;
+}
+
+.rbc-toolbar button.rbc-active {
+  background-color: #dbdafe !important;
+  box-shadow: none !important;
+}
+
+.rbc-time-view {
+  border-color: #eee !important;
+}
+
+/* Hides the header without breaking the calendar's column math */
+.rbc-time-header {
+  visibility: hidden !important;
+  height: 0px !important;
+  min-height: 0px !important;
+  overflow: hidden !important;
+}
+
+.rbc-time-content {
+  border: none !important;
+}
+
+/* Time labels on the left (e.g., 8:00 AM) - Size reduced */
+.rbc-time-gutter.rbc-time-column {
+  font-size: 11px !important; 
+}
+
+/* Removed the heavy padding that misaligned the left time labels */
+.rbc-time-gutter.rbc-time-column .rbc-timeslot-group {
+  padding: 0px 5px !important; 
+}
+
+.rbc-timeslot-group {
+  background-color: #f7fdff !important;
+}
+
+.rbc-day-slot {
+  font-size: 14px !important;
+}
+
+/* Replaced margins with borders to keep spacing safely without breaking grid alignment */
+.rbc-event {
+  box-sizing: border-box !important;
+  border: 2px solid white !important;
+  border-radius: 6px !important;
+  color: black !important;
+  padding: 5px !important;
+  width: 100% !important; 
+}
+
+/* Reduces the size of the subject name */
+.rbc-event-content {
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+}
+
+/* Reduces the size of the time label inside the event */
+.rbc-event-label {
+  font-size: 10px !important;
+  color: gray !important;
+  margin-bottom: 2px !important;
+}
+
+/* Event Colors */
+.rbc-event:nth-child(1) { background-color: #e2f8ff !important; }
+.rbc-event:nth-child(2) { background-color: #fefce8 !important; }
+.rbc-event:nth-child(3) { background-color: #f2f1ff !important; }
+.rbc-event:nth-child(4) { background-color: #fdf2fb !important; }
+.rbc-event:nth-child(5) { background-color: #e2f8ff !important; }
+.rbc-event:nth-child(6) { background-color: #fefce8 !important; }
+.rbc-event:nth-child(7) { background-color: #f2f1ff !important; }
+.rbc-event:nth-child(8) { background-color: #fdf2fb !important; }
+
+
+/* --- RESPONSIVE CALENDAR TWEAKS --- */
+@media (max-width: 768px) {
+  /* Stack the toolbar controls vertically */
+  .rbc-toolbar {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    align-items: stretch !important;
+    margin-bottom: 15px !important;
+  }
+
+  .rbc-toolbar-label {
+    text-align: center !important;
+    padding: 5px 0 !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+  }
+
+  /* Wrap the buttons so they don't stretch off the screen */
+  .rbc-btn-group {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    width: 100% !important;
+    gap: 5px !important;
+  }
+
+  .rbc-btn-group button {
+    flex: 1 1 auto !important; 
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+  }
+
+  /* Shrink time gutter further on mobile */
+  .rbc-time-gutter.rbc-time-column {
+    font-size: 10px !important;
+    min-width: 45px !important; 
+  }
+
+  .rbc-event-content {
+    font-size: 11px !important; 
+  }
+}
