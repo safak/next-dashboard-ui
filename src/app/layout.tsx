@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+// @ts-ignore: global CSS import for Next.js
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
