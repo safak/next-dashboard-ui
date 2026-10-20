@@ -1,0 +1,25 @@
+@media print {
+
+  nav,
+  aside,
+  button,
+  header,
+  footer {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  .print-document {
+    margin: 0;
+    box-shadow: none !important;
+  }
+}

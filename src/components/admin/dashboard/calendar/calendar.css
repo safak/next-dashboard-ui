@@ -1,0 +1,97 @@
+.react-calendar {
+  width: 100%;
+  border: none;
+  font-family: inherit;
+}
+
+.react-calendar__navigation {
+  display: none;
+}
+
+.react-calendar__month-view__weekdays {
+  text-transform: capitalize;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 10px;
+}
+
+.react-calendar__month-view__weekdays__weekday {
+  padding: 8px 0;
+}
+
+.react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none;
+}
+
+/* Reset weekend color */
+.react-calendar__month-view__days__day--weekend {
+    color: inherit;
+}
+
+/* Only Sundays should be red */
+.react-calendar__month-view__days__day--weekend:nth-child(7n + 1) {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.react-calendar__tile {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    min-height: 44px;
+    padding: 6px 4px;
+    border-radius: 10px;
+    background: transparent;
+    transition: all .2s ease;
+}
+
+.react-calendar__tile:hover {
+  background: #f3f4f6;
+}
+
+.react-calendar__tile--active {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+.react-calendar__tile--now {
+    background: #eff6ff !important;
+    border: 2px solid #2563eb;
+    color: #2563eb !important;
+    font-weight: 700;
+    border-radius: 10px;
+}
+
+.calendar-second-saturday {
+  background: #fff7ed;
+}
+
+.calendar-holiday {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.calendar-dot-container {
+    display: flex;
+    justify-content: center;
+    gap: 3px;
+    margin-top: 2px;
+}
+
+.calendar-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+}
+
+.calendar-dot.holiday {
+  background: #ef4444;
+}
+
+.calendar-dot.saturday {
+  background: #f97316;
+}
+
+.calendar-dot.event {
+  background: #22c55e;
+}

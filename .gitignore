@@ -35,3 +35,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+# Local development and deployment-only files
+.env*
+!.env.example
+!.env.sample
+.vscode/
+temp_migrations_restore/
+
+# Runtime-uploaded files
+public/uploads/

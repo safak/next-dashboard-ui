@@ -1,0 +1,278 @@
+/* ============================================================
+   STUDENT ATTENDANCE - MONTH PICKER
+   ============================================================ */
+
+.student-attendance-month-picker {
+  z-index: 9999 !important;
+  margin-top: 6px;
+}
+
+/* ============================================================
+   POPUP CONTAINER
+   ============================================================ */
+
+.student-attendance-month-picker .react-datepicker {
+  width: 235px;
+  margin: 0;
+  padding: 0;
+
+  overflow: hidden;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 16px 32px rgba(15, 23, 42, 0.10),
+    0 4px 12px rgba(15, 23, 42, 0.05);
+
+  font-family: inherit;
+}
+
+/* Remove default triangle */
+.student-attendance-month-picker
+  .react-datepicker__triangle {
+  display: none;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+.student-attendance-month-picker
+  .react-datepicker__header {
+  position: relative;
+
+  width: 100%;
+  height: 35px;
+
+  margin: 0;
+  padding: 7px;
+
+  border: 0;
+  border-bottom: 1px solid #e5e7eb;
+
+  background: #eef2ff;
+}
+
+.student-attendance-month-picker
+  .react-datepicker__current-month {
+  display: flex;
+
+  width: 100%;
+  height: 35px;
+
+  align-items: center;
+  justify-content: center;
+
+  margin: 0;
+
+  color: #0f172a;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  line-height: 35px;
+}
+
+/* ============================================================
+   PREVIOUS / NEXT YEAR
+   ============================================================ */
+
+.student-attendance-month-picker
+  .react-datepicker__navigation {
+  position: absolute;
+
+  top: 9px;
+
+  width: 24px;
+  height: 24px;
+
+  margin: 0;
+  padding: 0;
+
+  border: 0;
+  border-radius: 6px;
+
+  background: transparent;
+
+  cursor: pointer;
+}
+
+.student-attendance-month-picker
+  .react-datepicker__navigation:hover {
+  background: #e0e7ff;
+}
+
+/* Previous */
+.student-attendance-month-picker
+  .react-datepicker__navigation--previous {
+  left: 9px;
+}
+
+/* Next */
+.student-attendance-month-picker
+  .react-datepicker__navigation--next {
+  right: 9px;
+}
+
+/* Arrow */
+.student-attendance-month-picker
+  .react-datepicker__navigation-icon::before {
+  width: 7px;
+  height: 7px;
+
+  border-color: #64748b;
+}
+
+.student-attendance-month-picker
+  .react-datepicker__navigation:hover
+  .react-datepicker__navigation-icon::before {
+  border-color: #4338ca;
+}
+
+/* ============================================================
+   MONTH CONTAINER
+   IMPORTANT:
+   react-datepicker uses __month-wrapper
+   for showMonthYearPicker.
+   ============================================================ */
+
+.student-attendance-month-picker
+  .react-datepicker__month-container {
+  width: 100%;
+
+  float: none;
+
+  background: #ffffff;
+}
+
+/* ============================================================
+   MONTH GRID
+   ============================================================ */
+
+.student-attendance-month-picker
+  .react-datepicker__month-wrapper {
+  display: flex;
+
+  width: 100%;
+  height: 34px;
+
+  margin: 0;
+  padding: 0 12px;
+
+  box-sizing: border-box;
+
+  align-items: center;
+}
+
+/* ============================================================
+   MONTH ITEM
+   ============================================================ */
+
+.student-attendance-month-picker
+  .react-datepicker__month-text {
+  display: flex !important;
+
+  width: calc(33.333333% - 4px) !important;
+  height: 30px !important;
+
+  margin: 0 2px !important;
+  padding: 0 !important;
+
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+
+  border-radius: 7px;
+
+  color: #334155;
+
+  font-size: 12px;
+  font-weight: 500;
+
+  line-height: 30px;
+
+  cursor: pointer;
+
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+/* Hover */
+
+.student-attendance-month-picker
+  .react-datepicker__month-text:hover {
+  background: #eef2ff;
+
+  color: #4338ca;
+}
+
+/* Selected */
+
+.student-attendance-month-picker
+  .react-datepicker__month-text--selected {
+  background: #2563eb;
+
+  color: #ffffff;
+
+  font-weight: 600;
+
+  box-shadow:
+    0 2px 4px rgba(37, 99, 235, 0.18);
+}
+
+/* Selected hover */
+
+.student-attendance-month-picker
+  .react-datepicker__month-text--selected:hover {
+  background: #1d4ed8;
+
+  color: #ffffff;
+}
+
+/* Disabled */
+
+.student-attendance-month-picker
+  .react-datepicker__month-text--disabled {
+  background: transparent;
+
+  color: #cbd5e1;
+
+  cursor: not-allowed;
+}
+
+.student-attendance-month-picker
+  .react-datepicker__month-text--disabled:hover {
+  background: transparent;
+
+  color: #cbd5e1;
+}
+
+/* ============================================================
+   REMOVE UNNECESSARY DEFAULT SPACING
+   ============================================================ */
+
+.student-attendance-month-picker
+  .react-datepicker__month-wrapper
+  .react-datepicker__month-text {
+  margin: 0;
+}
+
+/* ============================================================
+   ACCESSIBILITY / FOCUS
+   ============================================================ */
+
+.student-attendance-month-picker
+  .react-datepicker__month-text:focus {
+  outline: none;
+}
+
+.student-attendance-month-picker
+  .react-datepicker__month-text--selected:focus {
+  outline: 2px solid #93c5fd;
+  outline-offset: 1px;
+}
