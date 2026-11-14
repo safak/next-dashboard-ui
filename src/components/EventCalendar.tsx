@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
@@ -11,22 +11,19 @@ type ValuePiece = Date | null;
 type Value = ValuePiece | [ValuePiece, ValuePiece];
 
 const EventCalendarInner = () => {
-  const [value, onChange] = useState<Value>(new Date());
+  const [value, setValue] = useState<Value>(new Date());
   const router = useRouter();
-  const isInitialMount = useRef(true);
 
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
+  // Navigate only when the user picks a date. Doing this in an effect fired
+  // on mount (React runs effects twice in dev), hijacking menu navigation.
+  const handleChange = (newValue: Value) => {
+    setValue(newValue);
+    if (newValue instanceof Date) {
+      router.push(`?date=${newValue.toISOString()}`, { scroll: false });
     }
+  };
 
-    if (value instanceof Date) {
-      router.push(`?date=${value.toISOString()}`);
-    }
-  }, [value, router]);
-
-  return <Calendar locale="en-US" onChange={onChange} value={value} />;
+  return <Calendar locale="en-US" onChange={handleChange} value={value} />;
 };
 
 const EventCalendar = dynamic(() => Promise.resolve(EventCalendarInner), {
