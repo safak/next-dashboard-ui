@@ -8,16 +8,36 @@ const Table = ({
   data: any[];
 }) => {
   return (
-    <table className="w-full mt-4">
-      <thead>
-        <tr className="text-left text-gray-500 text-sm">
-          {columns.map((col) => (
-            <th key={col.accessor} className={col.className}>{col.header}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>{data.map((item) => renderRow(item))}</tbody>
-    </table>
+    <div className="w-full mt-4 overflow-x-auto">
+      <table className="w-full">
+        <thead>
+          <tr className="text-left text-xs uppercase tracking-wide text-gray-400 border-b border-gray-200">
+            {columns.map((col) => (
+              <th
+                key={col.accessor}
+                className={`font-semibold py-3 first:pl-4 ${col.className ?? ""}`}
+              >
+                {col.header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {data.length > 0 ? (
+            data.map((item) => renderRow(item))
+          ) : (
+            <tr>
+              <td
+                colSpan={columns.length}
+                className="py-12 text-center text-sm text-gray-400"
+              >
+                No records found.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 };
 

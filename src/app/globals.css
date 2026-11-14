@@ -45,7 +45,8 @@
   border-color: #eee !important;
 }
 
-.rbc-time-header {
+/* Keep the weekday labels, hide only the empty all-day row */
+.rbc-time-header .rbc-allday-cell {
   display: none !important;
 }
 
@@ -105,4 +106,48 @@
 .rbc-event-label{
   color: gray !important;
   margin-bottom: 5px;
+}
+/* ---------- Base ---------- */
+
+html,
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #1f2937;
+}
+
+:focus-visible {
+  outline: 2px solid #a5a3f5;
+  outline-offset: 2px;
+}
+
+/* Thin, unobtrusive scrollbars instead of the chunky Windows defaults */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4e0 transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: #d4d4e0;
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-xl shadow-[0_1px_3px_rgba(16,24,40,0.06)] border border-gray-100;
+  }
+
+  .form-control {
+    @apply w-full rounded-lg bg-white px-3 py-2 text-sm text-gray-700 ring-1 ring-gray-300 outline-none transition placeholder:text-gray-400 focus:ring-2 focus:ring-lamaPurple;
+  }
+
+  .btn-primary {
+    @apply rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-60;
+  }
 }

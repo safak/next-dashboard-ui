@@ -13,7 +13,7 @@ const Navbar = async () => {
 
   return (
     <div className="flex items-center justify-between p-4">
-      <div className="hidden md:flex items-center gap-2 text-xs rounded-full ring-[1.5px] ring-gray-300 px-2">
+      <div className="hidden md:flex items-center gap-2 text-xs rounded-full bg-white ring-1 ring-gray-200 px-3 transition focus-within:ring-2 focus-within:ring-lamaPurple">
         <Image src="/search.png" alt="" width={14} height={14} />
         <input
           type="text"
@@ -24,16 +24,16 @@ const Navbar = async () => {
       <div className="flex items-center gap-6 justify-end w-full">
         <Link
           href="/list/messages"
-          className="bg-white rounded-full w-7 h-7 flex items-center justify-center"
+          className="bg-white rounded-full w-9 h-9 flex items-center justify-center shadow-sm transition hover:bg-gray-50"
         >
           <Image src="/message.png" alt="Messages" width={20} height={20} />
         </Link>
         <Link
           href="/list/announcements"
-          className="bg-white rounded-full w-7 h-7 flex items-center justify-center relative"
+          className="bg-white rounded-full w-9 h-9 flex items-center justify-center shadow-sm transition hover:bg-gray-50 relative"
         >
           <Image src="/announcement.png" alt="Announcements" width={20} height={20} />
-          <div className="absolute -top-3 -right-3 w-5 h-5 flex items-center justify-center bg-purple-500 text-white rounded-full text-xs">
+          <div className="absolute -top-1.5 -right-1.5 w-5 h-5 ring-2 ring-[#F7F8FA] flex items-center justify-center bg-purple-500 text-white rounded-full text-xs">
             1
           </div>
         </Link>
