@@ -58,7 +58,7 @@ const AttendanceListPage = async ({
         switch (key) {
           case "search":
             query.student = {
-              name: { contains: value, mode: "insensitive" },
+              name: { contains: value },
             };
             break;
           default:

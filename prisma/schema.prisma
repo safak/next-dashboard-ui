@@ -2,9 +2,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Prisma CLI (migrate/studio) uses this local file; the app connects to
+// Turso through the libSQL adapter in src/lib/prisma.ts
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model Admin {
