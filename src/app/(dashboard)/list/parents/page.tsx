@@ -93,7 +93,7 @@ const renderRow = (item: ParentList) => (
       if (value !== undefined) {
         switch (key) {
           case "search":
-            query.name = { contains: value, mode: "insensitive" };
+            query.name = { contains: value };
             break;
           default:
             break;

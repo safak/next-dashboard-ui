@@ -1,5 +1,13 @@
 import { Day, PrismaClient, UserSex } from "@prisma/client";
-const prisma = new PrismaClient();
+import { PrismaLibSQL } from "@prisma/adapter-libsql";
+import "dotenv/config";
+
+const prisma = new PrismaClient({
+  adapter: new PrismaLibSQL({
+    url: process.env.TURSO_DATABASE_URL ?? "file:./prisma/dev.db",
+    authToken: process.env.TURSO_AUTH_TOKEN,
+  }),
+});
 
 async function main() {
   // ADMIN

@@ -11,6 +11,8 @@
   "dependencies": {
     "@clerk/nextjs": "^7.0.6",
     "@hookform/resolvers": "^5.2.2",
+    "@libsql/client": "^0.15.15",
+    "@prisma/adapter-libsql": "^6.19.2",
     "@prisma/client": "^6.19.2",
     "@types/react-big-calendar": "^1.16.3",
     "moment": "^2.30.1",

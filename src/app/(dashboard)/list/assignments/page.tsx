@@ -104,7 +104,7 @@ const AssignmentListPage = async ({
             break;
           case "search":
             query.lesson.subject = {
-              name: { contains: value, mode: "insensitive" },
+              name: { contains: value },
             };
             break;
           default:
