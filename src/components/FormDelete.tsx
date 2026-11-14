@@ -9,13 +9,16 @@ type FormDeleteProps = {
   deleteAction: (
     currentState: { success: boolean; error: boolean },
     formData: FormData
-  ) => Promise<{ success: boolean; error: boolean }>;
+  ) => Promise<{ success: boolean; error: boolean; message?: string }>;
   onClose: () => void;
 };
 
 const FormDelete = ({ table, id, deleteAction, onClose }: FormDeleteProps) => {
   const router = useRouter();
-  const [state, formAction] = useActionState(deleteAction, {
+  const [state, formAction] = useActionState<
+    { success: boolean; error: boolean; message?: string },
+    FormData
+  >(deleteAction, {
     success: false,
     error: false,
   });
@@ -35,7 +38,7 @@ const FormDelete = ({ table, id, deleteAction, onClose }: FormDeleteProps) => {
       </span>
       {state.error && (
         <span className="text-red-500 text-center text-sm">
-          Something went wrong!
+          {state.message || "Something went wrong!"}
         </span>
       )}
       <button

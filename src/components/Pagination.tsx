@@ -14,18 +14,22 @@ const Pagination = ({ page, count }: { page: number; count: number }) => {
     params.set("page", newPage.toString());
     router.push(`${window.location.pathname}?${params}`);
   };
+
+  const navButton =
+    "py-2 px-4 rounded-lg bg-gray-100 text-xs font-semibold text-gray-600 transition hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100";
+
   return (
     <div className="p-4 flex items-center justify-between text-gray-500">
       <button
         disabled={!hasPrev}
-        className="py-2 px-4 rounded-md bg-slate-200 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+        className={navButton}
         onClick={() => {
           changePage(page - 1);
         }}
       >
         Prev
       </button>
-      <div className="flex items-center gap-2 text-sm">
+      <div className="flex items-center gap-1 text-sm">
         {Array.from(
           { length: Math.ceil(count / ITEM_PER_PAGE) },
           (_, index) => {
@@ -33,8 +37,11 @@ const Pagination = ({ page, count }: { page: number; count: number }) => {
             return (
               <button
                 key={pageIndex}
-                className={`px-2 rounded-sm ${
-                  page === pageIndex ? "bg-lamaSky" : ""
+                aria-current={page === pageIndex ? "page" : undefined}
+                className={`min-w-8 h-8 px-2 rounded-lg transition ${
+                  page === pageIndex
+                    ? "bg-lamaSky text-gray-900 font-semibold"
+                    : "hover:bg-gray-100"
                 }`}
                 onClick={() => {
                   changePage(pageIndex);
@@ -47,7 +54,7 @@ const Pagination = ({ page, count }: { page: number; count: number }) => {
         )}
       </div>
       <button
-        className="py-2 px-4 rounded-md bg-slate-200 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+        className={navButton}
         disabled={!hasNext}
         onClick={() => {
           changePage(page + 1);

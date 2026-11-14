@@ -129,7 +129,7 @@ const ExamForm = ({
       {state.error && (
         <span className="text-red-500">Something went wrong!</span>
       )}
-      <button className="bg-blue-400 text-white p-2 rounded-md">
+      <button className="btn-primary">
         {type === "create" ? "Create" : "Update"}
       </button>
     </form>

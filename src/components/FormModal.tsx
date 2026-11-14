@@ -5,8 +5,15 @@ import Image from "next/image";
 import { Dispatch, SetStateAction, useState } from "react";
 import FormDelete from "./FormDelete";
 import {
+  deleteAnnouncement,
+  deleteAssignment,
+  deleteAttendance,
   deleteClass,
+  deleteEvent,
   deleteExam,
+  deleteLesson,
+  deleteParent,
+  deleteResult,
   deleteStudent,
   deleteSubject,
   deleteTeacher,
@@ -25,6 +32,27 @@ const ClassForm = dynamic(() => import("./forms/ClassForm"), {
   loading: () => <h1>Loading...</h1>,
 });
 const ExamForm = dynamic(() => import("./forms/ExamForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const ParentForm = dynamic(() => import("./forms/ParentForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const LessonForm = dynamic(() => import("./forms/LessonForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const AssignmentForm = dynamic(() => import("./forms/AssignmentForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const ResultForm = dynamic(() => import("./forms/ResultForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const AttendanceForm = dynamic(() => import("./forms/AttendanceForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const EventForm = dynamic(() => import("./forms/EventForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const AnnouncementForm = dynamic(() => import("./forms/AnnouncementForm"), {
   loading: () => <h1>Loading...</h1>,
 });
 
@@ -51,19 +79,47 @@ const forms: {
   exam: (type, data, setOpen, relatedData) => (
     <ExamForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
   ),
+  parent: (type, data, setOpen, relatedData) => (
+    <ParentForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
+  ),
+  lesson: (type, data, setOpen, relatedData) => (
+    <LessonForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
+  ),
+  assignment: (type, data, setOpen, relatedData) => (
+    <AssignmentForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
+  ),
+  result: (type, data, setOpen, relatedData) => (
+    <ResultForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
+  ),
+  attendance: (type, data, setOpen, relatedData) => (
+    <AttendanceForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
+  ),
+  event: (type, data, setOpen, relatedData) => (
+    <EventForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
+  ),
+  announcement: (type, data, setOpen, relatedData) => (
+    <AnnouncementForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
+  ),
 };
 
 const deleteActions: {
   [key: string]: (
     currentState: { success: boolean; error: boolean },
     formData: FormData
-  ) => Promise<{ success: boolean; error: boolean }>;
+  ) => Promise<{ success: boolean; error: boolean; message?: string }>;
 } = {
   subject: deleteSubject,
   class: deleteClass,
   teacher: deleteTeacher,
   student: deleteStudent,
   exam: deleteExam,
+  parent: deleteParent,
+  lesson: deleteLesson,
+  assignment: deleteAssignment,
+  result: deleteResult,
+  attendance: deleteAttendance,
+  event: deleteEvent,
+  announcement: deleteAnnouncement,
 };
 
 const FormModal = ({
@@ -141,21 +197,31 @@ const FormModal = ({
     <>
       <button
         type="button"
-        className={`${size} flex items-center justify-center rounded-full ${bgColor}`}
+        title={`${type.charAt(0).toUpperCase() + type.slice(1)} ${table}`}
+        className={`${size} flex items-center justify-center rounded-full ${bgColor} transition hover:brightness-95 hover:shadow-sm`}
         onClick={() => setOpen(true)}
       >
         <Image src={`/${type}.png`} alt="" width={16} height={16} />
       </button>
       {open && (
-        <div className="w-screen h-screen absolute left-0 top-0 bg-black bg-opacity-60 z-50 flex items-center justify-center">
-          <div className="bg-white p-4 rounded-md relative w-[90%] md:w-[70%] lg:w-[60%] xl:w-[50%] 2xl:w-[40%]">
+        <div
+          className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={(e) => e.target === e.currentTarget && setOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="bg-white p-6 rounded-2xl shadow-xl relative w-full md:w-[70%] lg:w-[60%] xl:w-[50%] 2xl:w-[40%] max-h-[90vh] overflow-y-auto"
+          >
             <Form />
-            <div
-              className="absolute top-4 right-4 cursor-pointer"
+            <button
+              type="button"
+              aria-label="Close"
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
               onClick={() => setOpen(false)}
             >
               <Image src="/close.png" alt="" width={14} height={14} />
-            </div>
+            </button>
           </div>
         </div>
       )}

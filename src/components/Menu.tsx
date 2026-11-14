@@ -1,6 +1,5 @@
 import { currentUser } from "@clerk/nextjs/server";
-import Image from "next/image";
-import Link from "next/link";
+import MenuLink from "./MenuLink";
 import MenuLogout from "./MenuLogout";
 
 const menuItems = [
@@ -129,10 +128,10 @@ const Menu = async () => {
   };
 
   return (
-    <div className="mt-4 text-sm">
+    <nav className="mt-4 text-sm pb-6">
       {menuItems.map((section) => (
-        <div className="flex flex-col gap-2" key={section.title}>
-          <span className="hidden lg:block text-gray-400 font-light my-4">
+        <div className="flex flex-col gap-1" key={section.title}>
+          <span className="hidden lg:block px-3 mt-4 mb-2 text-[11px] font-semibold tracking-wider text-gray-400">
             {section.title}
           </span>
           {section.items.map((item) => {
@@ -145,19 +144,17 @@ const Menu = async () => {
             }
 
             return (
-              <Link
-                href={getHref(item.href)}
+              <MenuLink
                 key={item.label}
-                className="flex items-center justify-center lg:justify-start gap-4 text-gray-500 py-2 md:px-2 rounded-md hover:bg-lamaSkyLight"
-              >
-                <Image src={item.icon} alt="" width={20} height={20} />
-                <span className="hidden lg:block">{item.label}</span>
-              </Link>
+                href={getHref(item.href)}
+                icon={item.icon}
+                label={item.label}
+              />
             );
           })}
         </div>
       ))}
-    </div>
+    </nav>
   );
 };
 

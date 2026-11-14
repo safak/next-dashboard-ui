@@ -15,18 +15,20 @@ export default async function DashboardLayout({
 
   return (
     <div className="h-screen flex">
-      <div className="w-[14%] md:w-[8%] lg:w-[16%] xl:w-[14%] ">
+      <aside className="w-[14%] md:w-[8%] lg:w-[16%] xl:w-[14%] h-full overflow-y-auto bg-white border-r border-gray-100 px-2 lg:px-4 py-4">
         <Link
           href={homeHref}
-          className="flex items-center justify-center lg:justify-start gap-2"
+          className="flex items-center justify-center lg:justify-start gap-2 lg:px-3"
         >
           <Image src="/logo.png" alt="logo" width={32} height={32} />
-          <span className="hidden lg:block">School Name</span>
+          <span className="hidden lg:block font-semibold text-gray-800">
+            School Name
+          </span>
         </Link>
         <Menu />
-      </div>
+      </aside>
 
-      <div className="w-[86%] md:w-[92%] lg:w-[84%] xl:w-[86%] bg-[#F7F8FA] overflow-scroll flex flex-col">
+      <div className="w-[86%] md:w-[92%] lg:w-[84%] xl:w-[86%] bg-[#F7F8FA] overflow-y-auto flex flex-col">
         <Navbar />
         {children}
       </div>

@@ -29,7 +29,7 @@ const role = (user?.publicMetadata as { role?: string })?.role;
   });
 
   return (
-    <div className="bg-white p-4 rounded-md">
+    <div className="card p-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Announcements</h1>
         <Link href="/list/announcements" className="text-xs text-gray-400">
