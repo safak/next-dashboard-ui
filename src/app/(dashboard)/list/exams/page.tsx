@@ -19,7 +19,7 @@ type ExamList = Exam & {
 const ExamListPage = async ({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | undefined };
+  searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
 
 const { userId, sessionClaims } =await auth();
@@ -82,7 +82,7 @@ const renderRow = (item: ExamList) => (
   </tr>
 );
 
-  const { page, ...queryParams } = searchParams;
+  const { page, ...queryParams } = await searchParams;
 
   const p = page ? parseInt(page) : 1;
 

@@ -45,8 +45,13 @@
   border-color: #eee !important;
 }
 
-.rbc-time-header {
+/* Hide the all-day row but keep the day names (Mon, Tue...) visible */
+.rbc-allday-cell {
   display: none !important;
+}
+
+.rbc-time-header-content {
+  border-left-color: #eee !important;
 }
 
 .rbc-time-content {
@@ -57,11 +62,15 @@
   font-size: 10px !important;
 }
 
-.rbc-time-gutter.rbc-time-column .rbc-timeslot-group {
-  padding: 40px 20px !important;
+.rbc-time-gutter .rbc-label {
+  padding: 0 12px !important;
 }
 
+/* Every hour row has the SAME height in the time gutter and in the day
+   columns. (Padding only the gutter made its rows taller than the day
+   rows, which pushed lessons out of line with their times.) */
 .rbc-timeslot-group {
+  min-height: 80px !important;
   background-color: #f7fdff !important;
 }
 
@@ -69,12 +78,12 @@
   font-size: 14px !important;
 }
 
+/* No margin/width overrides here: react-big-calendar positions events with
+   inline top/height/left/width, and overriding them misaligns the blocks. */
 .rbc-event {
   border: none !important;
   color: black !important;
-  padding: 10px !important;
-  margin: 10px !important;
-  width: 99% !important;
+  padding: 6px 8px !important;
 }
 
 .rbc-event:nth-child(1) {

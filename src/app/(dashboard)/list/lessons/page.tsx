@@ -16,7 +16,7 @@ type LessonList = Lesson & { subject: Subject } & { class: Class } & {
 const LessonListPage = async ({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | undefined };
+  searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
 
 const { sessionClaims } =await auth();
@@ -70,7 +70,7 @@ const renderRow = (item: LessonList) => (
   </tr>
 );
 
-  const { page, ...queryParams } = searchParams;
+  const { page, ...queryParams } = await searchParams;
 
   const p = page ? parseInt(page) : 1;
 
