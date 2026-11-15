@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { parseRandToCents } from "./money";
 
 export const subjectSchema = z.object({
   id: z.coerce.number().optional(),
@@ -431,3 +432,54 @@ export const materialSchema = z.object({
 });
 
 export type MaterialSchema = z.input<typeof materialSchema>;
+
+// FEES (amounts arrive as text like "450" or "450.50" and become cents)
+
+const randAmount = z
+  .string()
+  .trim()
+  .refine((v) => parseRandToCents(v) !== null, {
+    message: "Enter an amount like 450 or 1 250.50",
+  });
+
+export const paymentSchema = z.object({
+  studentId: z.string().min(1),
+  amount: randAmount,
+  paidOn: z.coerce
+    .date({ message: "Payment date is required!" })
+    .max(new Date(Date.now() + 24 * 60 * 60 * 1000), { message: "The payment date can't be in the future!" }),
+  method: z.enum(["EFT", "CASH", "CARD", "OTHER"], { message: "Choose how they paid!" }),
+  reference: z.string().trim().max(100).optional().or(z.literal("")),
+});
+
+export type PaymentSchema = z.input<typeof paymentSchema>;
+
+export const feeSettingsSchema = z.object({
+  registrationFee: randAmount.or(z.literal("")),
+  siblingDiscountPercent: z.coerce
+    .number()
+    .int()
+    .min(0, { message: "Use 0–100" })
+    .max(100, { message: "Use 0–100" }),
+  paymentDueDay: z.coerce
+    .number()
+    .int()
+    .min(1, { message: "Use a day from 1 to 28" })
+    .max(28, { message: "Use a day from 1 to 28" }),
+  bankDetails: z.string().trim().max(500).optional().or(z.literal("")),
+});
+
+export type FeeSettingsSchema = z.input<typeof feeSettingsSchema>;
+
+export const feeRatesSchema = z.object({
+  rates: z.array(
+    z.object({
+      subjectId: z.number().int().nullable(),
+      format: z.enum(["ONE_ON_ONE", "GROUP", "HOUSE_CALL", "ONLINE"]),
+      // "" removes the rate
+      amount: randAmount.or(z.literal("")),
+    })
+  ),
+});
+
+export type FeeRatesSchema = z.input<typeof feeRatesSchema>;

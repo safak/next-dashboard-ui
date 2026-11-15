@@ -2,6 +2,7 @@ import Announcements from "@/components/Announcements";
 import BigCalendarContainer from "@/components/BigCalendarContainer";
 import LinkChildForm from "@/components/forms/LinkChildForm";
 import OnlineClassesCard from "@/components/OnlineClassesCard";
+import OverdueNotice from "@/components/fees/OverdueNotice";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
@@ -29,6 +30,7 @@ const ParentPage = async () => {
     <div className="flex-1 p-4 flex gap-4 flex-col xl:flex-row">
       {/* LEFT */}
       <div className="w-full xl:w-2/3 flex flex-col gap-4">
+        <OverdueNotice role="parent" userId={currentUserId!} />
         {pending.map((r) => (
           <div key={r.id} className="card p-4 text-sm">
             <span className="font-semibold">

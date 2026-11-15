@@ -56,6 +56,8 @@ model Student {
   class                   Class                    @relation(fields: [classId], references: [id])
   grade                   Grade                    @relation(fields: [gradeId], references: [id])
   parent                  Parent?                  @relation(fields: [parentId], references: [id])
+  invoices                Invoice[]
+  payments                Payment[]
 }
 
 model Teacher {
@@ -124,6 +126,7 @@ model Subject {
   // How the school offers it; limits the lesson types students can pick
   delivery      DeliveryMode          @default(BOTH)
   materials     Material[]
+  feeRates      FeeRate[]
 }
 
 model Lesson {
@@ -233,9 +236,16 @@ model Message {
 
 // Single-row table (id = 1) for school-wide settings
 model Setting {
-  id           Int    @id @default(1)
-  schoolName   String @default("School Name")
-  academicYear String @default("2025/26")
+  id                     Int     @id @default(1)
+  schoolName             String  @default("School Name")
+  academicYear           String  @default("2025/26")
+  // FEES (amounts in cents)
+  registrationFee        Int     @default(0)
+  siblingDiscountPercent Int     @default(0)
+  // Monthly invoices are due on this day of the month
+  paymentDueDay          Int     @default(7)
+  // Printed on invoices and statements so parents know where to pay
+  bankDetails            String?
 }
 
 // Optional weekly sessions students sign up for. Times are "HH:MM" strings
@@ -405,4 +415,71 @@ model Material {
   grade        Grade?       @relation(fields: [gradeId], references: [id])
 
   @@index([subjectId])
+}
+
+// FEES. All amounts are in cents (R450.00 = 45000) to avoid rounding errors.
+
+// Monthly fee for a subject taught a given way. A row without a subject is
+// the default for every subject that has no rate of its own.
+model FeeRate {
+  id            Int          @id @default(autoincrement())
+  subjectId     Int?
+  format        LessonFormat
+  monthlyAmount Int
+  subject       Subject?     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([subjectId, format])
+}
+
+enum InvoiceKind {
+  MONTHLY
+  REGISTRATION
+}
+
+model Invoice {
+  id          Int           @id @default(autoincrement())
+  number      String        @unique
+  studentId   String
+  kind        InvoiceKind
+  // "2026-11" for monthly invoices
+  period      String?
+  issueDate   DateTime      @default(now())
+  dueDate     DateTime
+  total       Int
+  createdById String
+  lines       InvoiceLine[]
+  student     Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, kind, period])
+  @@index([studentId])
+}
+
+// Discounts are lines with a negative amount
+model InvoiceLine {
+  id          Int     @id @default(autoincrement())
+  invoiceId   Int
+  description String
+  amount      Int
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+enum PaymentMethod {
+  EFT
+  CASH
+  CARD
+  OTHER
+}
+
+model Payment {
+  id           Int           @id @default(autoincrement())
+  studentId    String
+  amount       Int
+  paidOn       DateTime
+  method       PaymentMethod
+  reference    String?
+  recordedById String
+  createdAt    DateTime      @default(now())
+  student      Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
 }

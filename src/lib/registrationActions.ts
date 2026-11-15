@@ -39,6 +39,8 @@ const recordChildGuess = (keys: string[], message: string) => {
   if (message === NO_MATCH) keys.forEach((k) => recordAttempt(k, 60));
 };
 import { subjectChoicesProblem } from "./subjectChoices";
+import { invoiceNumbers } from "./fees";
+import { getSettings } from "./schoolSettings";
 
 type RegistrationState = {
   success: boolean;
@@ -313,12 +315,14 @@ export const approveRegistration = async (
   _state: RegistrationState,
   data: ApproveRegistrationSchema
 ): Promise<RegistrationState> => {
-  if (!(await isAdmin())) return fail("You are not allowed to do this.");
+  const { userId: adminId, role } = await auth();
+  if (role !== "admin" || !adminId) return fail("You are not allowed to do this.");
 
   const parsed = approveRegistrationSchema.safeParse(data);
   if (!parsed.success) {
     return fail(parsed.error.issues[0]?.message ?? "Choose a class.");
   }
+  const { registrationFee } = await getSettings();
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -368,6 +372,22 @@ export const approveRegistration = async (
         where: { id: reg.id },
         data: { status: "APPROVED", studentId: id, reviewedAt: new Date() },
       });
+
+      // The once-off registration fee, due a week from approval
+      if (registrationFee > 0) {
+        const nextNumber = await invoiceNumbers(tx);
+        await tx.invoice.create({
+          data: {
+            number: nextNumber(),
+            studentId: id,
+            kind: "REGISTRATION",
+            dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+            total: registrationFee,
+            createdById: adminId,
+            lines: { create: [{ description: "Registration fee", amount: registrationFee }] },
+          },
+        });
+      }
     });
   } catch (err) {
     if (err instanceof RegistrationError) return fail(err.message);

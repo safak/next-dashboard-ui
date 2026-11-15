@@ -4,6 +4,10 @@ import prisma from "./prisma";
 export const DEFAULT_SETTINGS = {
   schoolName: "Capital Mathematics Studies",
   academicYear: "2025/26",
+  registrationFee: 0,
+  siblingDiscountPercent: 0,
+  paymentDueDay: 7,
+  bankDetails: null as string | null,
 };
 
 // The row is only created the first time an admin saves settings
