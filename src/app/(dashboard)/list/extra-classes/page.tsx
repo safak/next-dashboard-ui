@@ -7,7 +7,10 @@ import TableSearch from "@/components/TableSearch";
 import { resolveOrderBy, SortMap, sortOptions, toOptions } from "@/lib/listQuery";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { Day, ExtraClass, Prisma, Subject, Teacher } from "@prisma/client";
+import { Day, ExtraClass, OnlineMeeting, Prisma, Subject, Teacher } from "@prisma/client";
+import MeetingButton from "@/components/MeetingButton";
+import { providerLabels, VideoIcon } from "@/components/meetingUi";
+import { integrationStatus } from "@/lib/meetings";
 import { auth } from "@/lib/auth";
 import Image from "next/image";
 import Link from "next/link";
@@ -16,6 +19,7 @@ type ExtraClassList = ExtraClass & {
   subject: Subject;
   teacher: Teacher;
   _count: { registrations: number };
+  meeting: OnlineMeeting | null;
   registrations?: { id: number }[];
 };
 
@@ -88,6 +92,7 @@ const ExtraClassListPage = async ({
       include: {
         subject: true,
         teacher: true,
+        meeting: true,
         _count: { select: { registrations: true } },
         ...(studentId && {
           registrations: { where: { studentId }, select: { id: true } },
@@ -115,6 +120,7 @@ const ExtraClassListPage = async ({
   const canManage = (item: ExtraClassList) =>
     role === "admin" || (role === "teacher" && item.teacherId === userId);
   const canCreate = role === "admin" || role === "teacher";
+  const integrations = integrationStatus();
 
   const columns = [
     { header: "Class", accessor: "name" },
@@ -165,6 +171,18 @@ const ExtraClassListPage = async ({
         </td>
         <td>
           <div className="flex items-center gap-2">
+            {registered && item.meeting && (
+              <a
+                href={item.meeting.joinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={`Join on ${providerLabels[item.meeting.provider]}`}
+                className="flex items-center gap-1 rounded-full bg-green-500 px-3 py-1 text-xs font-medium text-white transition hover:bg-green-600"
+              >
+                <VideoIcon className="w-3.5 h-3.5" />
+                Join
+              </a>
+            )}
             {studentId && (
               <ExtraClassRegisterButton
                 extraClassId={item.id}
@@ -182,6 +200,19 @@ const ExtraClassListPage = async ({
                 >
                   <Image src="/view.png" alt="" width={16} height={16} />
                 </Link>
+                <MeetingButton
+                  target={{ kind: "extraClass", id: item.id }}
+                  title={`${item.name} · ${item.subject.name}`}
+                  meeting={
+                    item.meeting && {
+                      provider: item.meeting.provider,
+                      joinUrl: item.meeting.joinUrl,
+                      passcode: item.meeting.passcode,
+                      managed: !!item.meeting.externalId,
+                    }
+                  }
+                  integrations={integrations}
+                />
                 <FormContainer table="extraClass" type="update" data={item} />
                 <FormContainer table="extraClass" type="delete" id={item.id} />
               </>

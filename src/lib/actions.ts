@@ -41,6 +41,7 @@ import bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
 import { Prisma } from "@prisma/client";
 import { nextStudentNumber } from "./studentNumber";
+import { deleteRemoteMeeting } from "./meetings";
 
 type CurrentState = { success: boolean; error: boolean; message?: string };
 
@@ -52,16 +53,15 @@ const getActionErrorMessage = (err: unknown, fallback: string) => {
     return "That username, email or phone is already in use.";
   }
 
-  if (typeof err === "object" && err !== null) {
-
-    const message = (err as { message?: string }).message;
-    if (typeof message === "string" && message.length > 0) {
-      return message;
-    }
-  }
-
+  // Anything else may contain database details, so keep it in the server log
   return fallback;
 };
+
+// Subject names are the only unique field on a subject
+const subjectErrorMessage = (err: unknown, fallback: string) =>
+  err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002"
+    ? "A subject with that name already exists."
+    : getActionErrorMessage(err, fallback);
 
 const hashPassword = (password: string) => bcrypt.hash(password, 10);
 
@@ -78,8 +78,14 @@ const syncLogin = async (
     const hash = await hashPassword(password);
     await tx.user.upsert({
       where: { id },
-      create: { id, username, password: hash, role },
-      update: { username, password: hash },
+      create: { id, username, password: hash, role, mustChangePassword: true },
+      // Also signs them out everywhere (see passwordChangedAt in auth.ts)
+      update: {
+        username,
+        password: hash,
+        mustChangePassword: true,
+        passwordChangedAt: new Date(),
+      },
     });
   } else {
     await tx.user.updateMany({ where: { id }, data: { username } });
@@ -91,11 +97,13 @@ export const createSubject = async (
   data: SubjectSchema
 ) => {
   try {
+    if (!(await isAdmin())) return NOT_ALLOWED;
     const parsedData = subjectSchema.parse(data);
 
     await prisma.subject.create({
       data: {
         name: parsedData.name,
+        delivery: parsedData.delivery,
         teachers: {
           connect: parsedData.teachers.map((teacherId) => ({ id: teacherId })),
         },
@@ -106,7 +114,11 @@ export const createSubject = async (
     return { success: true, error: false };
   } catch (err) {
     console.log(err);
-    return { success: false, error: true };
+    return {
+      success: false,
+      error: true,
+      message: subjectErrorMessage(err, "Failed to create subject."),
+    };
   }
 };
 
@@ -115,6 +127,7 @@ export const updateSubject = async (
   data: SubjectSchema
 ) => {
   try {
+    if (!(await isAdmin())) return NOT_ALLOWED;
     const parsedData = subjectSchema.parse(data);
 
     if (!parsedData.id) {
@@ -127,6 +140,7 @@ export const updateSubject = async (
       },
       data: {
         name: parsedData.name,
+        delivery: parsedData.delivery,
         teachers: {
           set: parsedData.teachers.map((teacherId) => ({ id: teacherId })),
         },
@@ -137,7 +151,11 @@ export const updateSubject = async (
     return { success: true, error: false };
   } catch (err) {
     console.log(err);
-    return { success: false, error: true };
+    return {
+      success: false,
+      error: true,
+      message: subjectErrorMessage(err, "Failed to update subject."),
+    };
   }
 };
 
@@ -145,11 +163,46 @@ export const deleteSubject = async (
   currentState: CurrentState,
   data: FormData
 ) => {
-  const id = data.get("id") as string;
+  const id = parseInt(data.get("id") as string);
   try {
+    if (!(await isAdmin())) return NOT_ALLOWED;
+
+    // Removing a subject in use would orphan timetables and enrolments,
+    // so say what still depends on it instead
+    const { _count } = await prisma.subject.findUniqueOrThrow({
+      where: { id },
+      select: {
+        _count: {
+          select: {
+            lessons: true,
+            extraClasses: true,
+            students: true,
+            registrations: true,
+            materials: true,
+          },
+        },
+      },
+    });
+    const inUse = [
+      [_count.lessons, "lesson"],
+      [_count.extraClasses, "extra class"],
+      [_count.students, "enrolled student"],
+      [_count.registrations, "registration"],
+      [_count.materials, "study material"],
+    ]
+      .filter(([n]) => (n as number) > 0)
+      .map(([n, what]) => `${n} ${what}${n === 1 ? "" : "s"}`);
+    if (inUse.length > 0) {
+      return {
+        success: false,
+        error: true,
+        message: `This subject is still used by ${inUse.join(", ")}. Move or delete those first.`,
+      };
+    }
+
     await prisma.subject.delete({
       where: {
-        id: parseInt(id),
+        id,
       },
     });
 
@@ -165,6 +218,8 @@ export const createClass = async (
   currentState: CurrentState,
   data: ClassSchema
 ) => {
+  if (!(await isAdmin())) return NOT_ALLOWED;
+
   try {
     const parsedData = classSchema.parse(data);
 
@@ -184,6 +239,8 @@ export const updateClass = async (
   currentState: CurrentState,
   data: ClassSchema
 ) => {
+  if (!(await isAdmin())) return NOT_ALLOWED;
+
   try {
     const parsedData = classSchema.parse(data);
 
@@ -210,6 +267,8 @@ export const deleteClass = async (
   currentState: CurrentState,
   data: FormData
 ) => {
+  if (!(await isAdmin())) return NOT_ALLOWED;
+
   const id = data.get("id") as string;
   try {
     await prisma.class.delete({
@@ -230,6 +289,8 @@ export const createTeacher = async (
   currentState: CurrentState,
   data: TeacherSchema
 ) => {
+  if (!(await isAdmin())) return NOT_ALLOWED;
+
   try {
     const parsedData = teacherSchema.parse(data);
     if (!parsedData.password) {
@@ -245,7 +306,13 @@ export const createTeacher = async (
 
     await prisma.$transaction(async (tx) => {
       await tx.user.create({
-        data: { id, username: parsedData.username, password, role: "teacher" },
+        data: {
+          id,
+          username: parsedData.username,
+          password,
+          role: "teacher",
+          mustChangePassword: true,
+        },
       });
       await tx.teacher.create({
         data: {
@@ -285,6 +352,8 @@ export const updateTeacher = async (
   currentState: CurrentState,
   data: TeacherSchema
 ) => {
+  if (!(await isAdmin())) return NOT_ALLOWED;
+
   const parsedData = teacherSchema.parse(data);
 
   if (!parsedData.id) {
@@ -333,6 +402,8 @@ export const deleteTeacher = async (
   currentState: CurrentState,
   data: FormData
 ) => {
+  if (!(await isAdmin())) return NOT_ALLOWED;
+
   const id = data.get("id") as string;
   try {
     await prisma.$transaction([
@@ -352,6 +423,8 @@ export const createStudent = async (
   currentState: CurrentState,
   data: StudentSchema
 ) => {
+  if (!(await isAdmin())) return NOT_ALLOWED;
+
   const parsedData = studentSchema.parse(data);
   console.log(parsedData);
   try {
@@ -377,7 +450,13 @@ export const createStudent = async (
 
     await prisma.$transaction(async (tx) => {
       await tx.user.create({
-        data: { id, username: parsedData.username, password, role: "student" },
+        data: {
+          id,
+          username: parsedData.username,
+          password,
+          role: "student",
+          mustChangePassword: true,
+        },
       });
       await tx.student.create({
         data: {
@@ -416,6 +495,8 @@ export const updateStudent = async (
   currentState: CurrentState,
   data: StudentSchema
 ) => {
+  if (!(await isAdmin())) return NOT_ALLOWED;
+
   const parsedData = studentSchema.parse(data);
 
   if (!parsedData.id) {
@@ -462,6 +543,8 @@ export const deleteStudent = async (
   currentState: CurrentState,
   data: FormData
 ) => {
+  if (!(await isAdmin())) return NOT_ALLOWED;
+
   const id = data.get("id") as string;
   try {
     await prisma.$transaction([
@@ -481,24 +564,11 @@ export const createExam = async (
   currentState: CurrentState,
   data: ExamSchema
 ) => {
-  // const { userId, sessionClaims } = auth();
-  // const role = (sessionClaims?.metadata as { role?: string })?.role;
-
   try {
     const parsedData = examSchema.parse(data);
 
-    // if (role === "teacher") {
-    //   const teacherLesson = await prisma.lesson.findFirst({
-    //     where: {
-    //       teacherId: userId!,
-    //       id: data.lessonId,
-    //     },
-    //   });
-
-    //   if (!teacherLesson) {
-    //     return { success: false, error: true };
-    //   }
-    // }
+    // Teachers only for their own lessons
+    if (!(await canManageLesson(parsedData.lessonId))) return NOT_ALLOWED;
 
     await prisma.exam.create({
       data: {
@@ -521,9 +591,6 @@ export const updateExam = async (
   currentState: CurrentState,
   data: ExamSchema
 ) => {
-  // const { userId, sessionClaims } = auth();
-  // const role = (sessionClaims?.metadata as { role?: string })?.role;
-
   try {
     const parsedData = examSchema.parse(data);
 
@@ -531,18 +598,17 @@ export const updateExam = async (
       return { success: false, error: true };
     }
 
-    // if (role === "teacher") {
-    //   const teacherLesson = await prisma.lesson.findFirst({
-    //     where: {
-    //       teacherId: userId!,
-    //       id: data.lessonId,
-    //     },
-    //   });
-
-    //   if (!teacherLesson) {
-    //     return { success: false, error: true };
-    //   }
-    // }
+    const existing = await prisma.exam.findUnique({
+      where: { id: parsedData.id },
+      select: { lessonId: true },
+    });
+    if (
+      !existing ||
+      !(await canManageLesson(existing.lessonId)) ||
+      !(await canManageLesson(parsedData.lessonId))
+    ) {
+      return NOT_ALLOWED;
+    }
 
     await prisma.exam.update({
       where: {
@@ -570,10 +636,15 @@ export const deleteExam = async (
 ) => {
   const id = data.get("id") as string;
 
-  // const { userId, sessionClaims } = auth();
-  // const role = (sessionClaims?.metadata as { role?: string })?.role;
-
   try {
+    const existing = await prisma.exam.findUnique({
+      where: { id: parseInt(id) },
+      select: { lessonId: true },
+    });
+    if (!existing || !(await canManageLesson(existing.lessonId))) {
+      return NOT_ALLOWED;
+    }
+
     await prisma.exam.delete({
       where: {
         id: parseInt(id),
@@ -637,7 +708,13 @@ export const createParent = async (
 
     await prisma.$transaction(async (tx) => {
       await tx.user.create({
-        data: { id, username: parsedData.username, password, role: "parent" },
+        data: {
+          id,
+          username: parsedData.username,
+          password,
+          role: "parent",
+          mustChangePassword: true,
+        },
       });
       await tx.parent.create({
         data: {
@@ -801,6 +878,8 @@ export const deleteLesson = async (
   try {
     if (!(await isAdmin())) return NOT_ALLOWED;
 
+    const meeting = await prisma.onlineMeeting.findUnique({ where: { lessonId: id } });
+
     // Remove everything that hangs off the lesson so the delete doesn't
     // fail on foreign keys
     await prisma.$transaction([
@@ -814,6 +893,7 @@ export const deleteLesson = async (
       prisma.attendance.deleteMany({ where: { lessonId: id } }),
       prisma.lesson.delete({ where: { id } }),
     ]);
+    if (meeting) await deleteRemoteMeeting(meeting).catch(console.log);
 
     revalidatePath("/list/lessons");
     return { success: true, error: false };
@@ -1466,8 +1546,11 @@ export const deleteExtraClass = async (
       return NOT_ALLOWED;
     }
 
-    // Registrations are removed by the cascade
+    const meeting = await prisma.onlineMeeting.findUnique({ where: { extraClassId: id } });
+
+    // Registrations and the meeting row are removed by the cascade
     await prisma.extraClass.delete({ where: { id } });
+    if (meeting) await deleteRemoteMeeting(meeting).catch(console.log);
 
     revalidatePath("/list/extra-classes");
     return { success: true, error: false };

@@ -2,8 +2,11 @@ import { z } from "zod";
 
 export const subjectSchema = z.object({
   id: z.coerce.number().optional(),
-  name: z.string().min(1, { message: "Subject name is required!" }),
+  name: z.string().trim().min(1, { message: "Subject name is required!" }),
   teachers: z.array(z.string()), //teacher ids
+  delivery: z.enum(["PHYSICAL", "ONLINE", "BOTH"], {
+    message: "Choose how the subject is offered!",
+  }),
 });
 
 export type SubjectSchema = z.input<typeof subjectSchema>;
@@ -252,6 +255,25 @@ export type ExtraClassSchema = z.input<typeof extraClassSchema>;
 
 // SELF-REGISTRATION
 
+// Subjects a learner takes, each with how they want it taught
+const subjectChoicesSchema = z
+  .array(
+    z.object({
+      subjectId: z.coerce.number(),
+      format: z.enum(["ONE_ON_ONE", "GROUP", "HOUSE_CALL", "ONLINE"], {
+        message: "Choose a lesson type for each subject!",
+      }),
+    })
+  )
+  .min(1, { message: "Choose at least one subject!" });
+
+export const studentSubjectsSchema = z.object({
+  studentId: z.string().min(1),
+  subjects: subjectChoicesSchema,
+});
+
+export type StudentSubjectsSchema = z.input<typeof studentSubjectsSchema>;
+
 const optionalText = z.string().trim().optional().or(z.literal(""));
 
 const accountFields = {
@@ -308,9 +330,7 @@ export const studentRegistrationSchema = z
     previousSchool: optionalText,
     lastGradeCompleted: optionalText,
     medicalNotes: z.string().trim().max(1000).optional().or(z.literal("")),
-    subjects: z
-      .array(z.string())
-      .min(1, { message: "Choose at least one subject!" }),
+    subjects: subjectChoicesSchema,
 
     guardianName: z
       .string()
@@ -391,3 +411,23 @@ export const approveRegistrationSchema = z.object({
 export type ApproveRegistrationSchema = z.input<
   typeof approveRegistrationSchema
 >;
+
+// Text fields of a study material upload (the file is checked separately)
+export const materialSchema = z.object({
+  title: z.string().trim().min(1, { message: "Title is required!" }).max(150),
+  description: z.string().trim().max(1000).optional().or(z.literal("")),
+  type: z.enum(["STUDY_MATERIAL", "QUESTION_PAPER", "MEMORANDUM"], {
+    message: "Choose what kind of material this is!",
+  }),
+  subjectId: z.coerce.number().int().min(1, { message: "Subject is required!" }),
+  // "" means every grade
+  gradeId: z.union([z.literal(""), z.coerce.number().int().min(1)]).optional(),
+  year: z
+    .union([
+      z.literal(""),
+      z.coerce.number().int().min(1990).max(2100, { message: "Enter a valid year!" }),
+    ])
+    .optional(),
+});
+
+export type MaterialSchema = z.input<typeof materialSchema>;

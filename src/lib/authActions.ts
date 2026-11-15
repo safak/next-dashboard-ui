@@ -4,6 +4,18 @@ import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { auth, createSession, deleteSession } from "./auth";
 import prisma from "./prisma";
+import {
+  blockedFor,
+  clearAttempts,
+  clientIp,
+  recordAttempt,
+  waitMessage,
+} from "./rateLimit";
+
+// Failed sign-ins allowed per account, and per device/network, every 15 min
+const ACCOUNT_LIMIT = 5;
+const IP_LIMIT = 20;
+const WINDOW_MINUTES = 15;
 
 export type AuthFormState = { error?: string; success?: boolean };
 
@@ -32,14 +44,22 @@ export const signIn = async (
     return { error: "Enter your username and password." };
   }
 
+  const accountKey = `signin:user:${username.toLowerCase()}`;
+  const ipKey = `signin:ip:${await clientIp()}`;
+  const wait = Math.max(blockedFor(accountKey, ACCOUNT_LIMIT), blockedFor(ipKey, IP_LIMIT));
+  if (wait) return { error: waitMessage("failed sign-in attempts", wait) };
+
   const user = await prisma.user.findUnique({ where: { username } });
   // Same message either way so usernames can't be probed
   if (!user || !(await bcrypt.compare(password, user.password))) {
+    recordAttempt(accountKey, WINDOW_MINUTES);
+    recordAttempt(ipKey, WINDOW_MINUTES);
     return { error: await registrationStatusMessage(username, password) };
   }
 
-  await createSession(user.id, user.role);
-  redirect(`/${user.role}`);
+  clearAttempts(accountKey);
+  await createSession(user.id, user.role, user.mustChangePassword);
+  redirect(user.mustChangePassword ? "/profile" : `/${user.role}`);
 };
 
 export const signOut = async () => {
@@ -51,8 +71,12 @@ export const changePassword = async (
   _state: AuthFormState,
   formData: FormData
 ): Promise<AuthFormState> => {
-  const { userId } = await auth();
-  if (!userId) return { error: "You are signed out." };
+  const { userId, role } = await auth();
+  if (!userId || !role) return { error: "You are signed out." };
+
+  const attemptsKey = `password:user:${userId}`;
+  const wait = blockedFor(attemptsKey, ACCOUNT_LIMIT);
+  if (wait) return { error: waitMessage("wrong current passwords", wait) };
 
   const current = String(formData.get("currentPassword") ?? "");
   const next = String(formData.get("newPassword") ?? "");
@@ -65,12 +89,26 @@ export const changePassword = async (
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user || !(await bcrypt.compare(current, user.password))) {
+    recordAttempt(attemptsKey, WINDOW_MINUTES);
     return { error: "Current password is incorrect." };
   }
+  if (await bcrypt.compare(next, user.password)) {
+    return { error: "Choose a password different from your current one." };
+  }
+  clearAttempts(attemptsKey);
 
+  // Bumping passwordChangedAt signs out every other device; this one gets
+  // a fresh session
   await prisma.user.update({
     where: { id: userId },
-    data: { password: await bcrypt.hash(next, 10) },
+    data: {
+      password: await bcrypt.hash(next, 10),
+      mustChangePassword: false,
+      passwordChangedAt: new Date(),
+    },
   });
+  await createSession(userId, role);
+
+  if (user.mustChangePassword) redirect(`/${role}`);
   return { success: true };
 };

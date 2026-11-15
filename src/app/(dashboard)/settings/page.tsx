@@ -2,6 +2,9 @@ import SettingsForm from "@/components/forms/SettingsForm";
 import { getSettings } from "@/lib/schoolSettings";
 import { auth } from "@/lib/auth";
 import Link from "next/link";
+import IntegrationStatus from "@/components/IntegrationStatus";
+import ResetPasswordForm from "@/components/ResetPasswordForm";
+import { integrationStatus } from "@/lib/meetings";
 
 const SettingsPage = async () => {
   const { role } = await auth();
@@ -32,6 +35,28 @@ const SettingsPage = async () => {
           </dl>
         )}
       </div>
+      {role === "admin" && (
+        <div className="card p-6">
+          <h1 className="text-lg font-semibold">Reset a password</h1>
+          <p className="text-sm text-gray-500 mb-4">
+            For anyone who forgot their password, including other admins. You
+            get a temporary password to give them; they choose their own when
+            they next sign in. This also lifts a sign-in lockout.
+          </p>
+          <ResetPasswordForm />
+        </div>
+      )}
+      {role === "admin" && (
+        <div className="card p-6">
+          <h1 className="text-lg font-semibold">Online classes</h1>
+          <p className="text-sm text-gray-500 mb-4">
+            Connect Zoom and Microsoft Teams so teachers can create meetings
+            for lessons and extra classes in one click. Without them,
+            teachers can still paste meeting links.
+          </p>
+          <IntegrationStatus configured={integrationStatus()} />
+        </div>
+      )}
       <div className="card p-6">
         <h1 className="text-lg font-semibold">Account</h1>
         <p className="text-sm text-gray-500 mb-4">

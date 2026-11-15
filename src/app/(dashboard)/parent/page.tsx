@@ -1,6 +1,7 @@
 import Announcements from "@/components/Announcements";
 import BigCalendarContainer from "@/components/BigCalendarContainer";
 import LinkChildForm from "@/components/forms/LinkChildForm";
+import OnlineClassesCard from "@/components/OnlineClassesCard";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
@@ -58,6 +59,9 @@ const ParentPage = async () => {
       </div>
       {/* RIGHT */}
       <div className="w-full xl:w-1/3 flex flex-col gap-8">
+        {students.length > 0 && (
+          <OnlineClassesCard role="parent" userId={currentUserId!} />
+        )}
         <div className="card p-4 flex flex-col gap-3">
           <h2 className="text-lg font-semibold">Link another child</h2>
           <p className="text-sm text-gray-500">

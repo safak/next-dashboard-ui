@@ -3,19 +3,20 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { startTransition, useActionState, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import {
   studentRegistrationSchema,
   StudentRegistrationSchema,
 } from "@/lib/formValidationSchemas";
 import { registerStudent } from "@/lib/registrationActions";
 import { Section, SelectField, TextAreaField, TextField } from "./RegistrationFields";
+import SubjectPicker, { SubjectChoice, SubjectOption } from "./SubjectPicker";
 
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Unknown"];
 
 type Props = {
   grades: { id: number; level: number }[];
-  subjects: { id: number; name: string }[];
+  subjects: SubjectOption[];
   schoolName: string;
   terms: { title: string; body: string }[];
 };
@@ -25,7 +26,8 @@ const StudentRegistrationForm = ({ grades, subjects, schoolName, terms }: Props)
     register,
     handleSubmit,
     watch,
-    formState: { errors },
+    control,
+    formState: { errors, isSubmitted },
   } = useForm<StudentRegistrationSchema>({
     resolver: zodResolver(studentRegistrationSchema),
     defaultValues: { subjects: [] },
@@ -162,25 +164,22 @@ const StudentRegistrationForm = ({ grades, subjects, schoolName, terms }: Props)
         <div>
           <legend className="text-base font-semibold text-gray-800">Subjects</legend>
           <p className="text-sm text-gray-500 mt-1">
-            Choose every subject you are registering for.
+            Choose every subject you are registering for, and how you want
+            each one taught: one-on-one, group, house call or online.
           </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-          {subjects.map((s) => (
-            <label
-              key={s.id}
-              className="flex items-center gap-2 rounded-lg ring-1 ring-gray-200 px-3 py-2 text-sm cursor-pointer has-[:checked]:ring-2 has-[:checked]:ring-indigo-400 has-[:checked]:bg-indigo-50"
-            >
-              <input
-                type="checkbox"
-                value={String(s.id)}
-                className="accent-indigo-500"
-                {...register("subjects")}
-              />
-              {s.name}
-            </label>
-          ))}
-        </div>
+        <Controller
+          control={control}
+          name="subjects"
+          render={({ field }) => (
+            <SubjectPicker
+              subjects={subjects}
+              value={field.value as SubjectChoice[]}
+              onChange={field.onChange}
+              showErrors={isSubmitted}
+            />
+          )}
+        />
         {errors.subjects?.message && (
           <p className="text-xs text-red-500">{errors.subjects.message}</p>
         )}

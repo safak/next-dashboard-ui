@@ -7,7 +7,8 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { Prisma, Subject, Teacher } from "@prisma/client";
+import { DeliveryMode, Prisma, Subject, Teacher } from "@prisma/client";
+import { DELIVERY_MODES, deliveryLabels, deliveryStyles } from "@/lib/subjectDelivery";
 import Image from "next/image";
 import { auth } from "@/lib/auth";
 
@@ -31,6 +32,10 @@ const SubjectListPage = async ({
       accessor: "name",
     },
     {
+      header: "Offered",
+      accessor: "delivery",
+    },
+    {
       header: "Teachers",
       accessor: "teachers",
       className: "hidden md:table-cell",
@@ -47,6 +52,13 @@ const SubjectListPage = async ({
       className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
     >
       <td className="flex items-center gap-4 p-4">{item.name}</td>
+      <td>
+        <span
+          className={`rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap ${deliveryStyles[item.delivery]}`}
+        >
+          {deliveryLabels[item.delivery]}
+        </span>
+      </td>
       <td className="hidden md:table-cell">
         {item.teachers.map((teacher) => teacher.name).join(",")}
       </td>
@@ -78,6 +90,11 @@ const SubjectListPage = async ({
           case "search":
             query.name = { contains: value };
             break;
+          case "delivery":
+            if (DELIVERY_MODES.includes(value as DeliveryMode)) {
+              query.delivery = value as DeliveryMode;
+            }
+            break;
           default:
             break;
         }
@@ -88,7 +105,7 @@ const SubjectListPage = async ({
   const [data, count] = await prisma.$transaction([
     prisma.subject.findMany({
       where: query,
-      orderBy: resolveOrderBy(SORTS, queryParams.sort),
+      orderBy: resolveOrderBy(SORTS, queryParams.sort) ?? { name: "asc" },
       include: {
         teachers: true,
       },
@@ -107,7 +124,13 @@ const SubjectListPage = async ({
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
             <ListControls
-              filters={[]}
+              filters={[
+                {
+                  key: "delivery",
+                  label: "Offered",
+                  options: DELIVERY_MODES.map((m) => ({ value: m, label: deliveryLabels[m] })),
+                },
+              ]}
               sorts={sortOptions(SORTS)}
             />
             {role === "admin" && (

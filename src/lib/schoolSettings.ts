@@ -2,7 +2,7 @@ import { cache } from "react";
 import prisma from "./prisma";
 
 export const DEFAULT_SETTINGS = {
-  schoolName: "School Name",
+  schoolName: "Capital Mathematics Studies",
   academicYear: "2025/26",
 };
 

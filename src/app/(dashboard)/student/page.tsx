@@ -2,6 +2,7 @@ import Announcements from "@/components/Announcements";
 import BigCalendarContainer from "@/components/BigCalendarContainer";
 import BigCalendar from "@/components/BigCalender";
 import EventCalendar from "@/components/EventCalendar";
+import OnlineClassesCard from "@/components/OnlineClassesCard";
 import prisma from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
@@ -37,6 +38,7 @@ const StudentPage = async () => {
       </div>
       {/* RIGHT */}
       <div className="w-full xl:w-1/3 flex flex-col gap-8">
+        <OnlineClassesCard role="student" userId={userId!} />
         <EventCalendar />
         <Announcements />
       </div>

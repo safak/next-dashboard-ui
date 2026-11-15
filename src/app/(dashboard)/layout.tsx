@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import Menu from "@/components/Menu";
@@ -11,6 +12,9 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { role } = await auth();
+  // The cookie looked valid to the proxy, but the account is gone or the
+  // session was revoked by a password change
+  if (!role) redirect("/");
   const homeHref = role ? `/${role}` : "/";
   const { schoolName } = await getSettings();
 

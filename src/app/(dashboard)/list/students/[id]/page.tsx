@@ -6,6 +6,8 @@ import StudentAttendanceCard from "@/components/StudentAttendanceCard";
 
 import prisma from "@/lib/prisma";
 import { StudentRegistration } from "@prisma/client";
+import { formatLabels } from "@/lib/subjectDelivery";
+import StudentSubjectsEditor from "@/components/StudentSubjectsEditor";
 import { auth } from "@/lib/auth";
 import Image from "next/image";
 import Link from "next/link";
@@ -18,16 +20,20 @@ const StudentRegistrationDetails = ({
   subjects,
   registration: reg,
   showPrivate,
+  editor,
 }: {
   subjects: string[];
   registration: StudentRegistration | null;
   showPrivate: boolean;
+  editor?: React.ReactNode;
 }) => (
   <div className="mt-4 card p-4 flex flex-col gap-4">
     <h1 className="text-xl font-semibold">Registration details</h1>
     <dl className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
       <div className="md:col-span-2">
-        <dt className="text-xs text-gray-500">Subjects</dt>
+        <dt className="text-xs text-gray-500 flex items-center gap-3">
+          Subjects {editor}
+        </dt>
         <dd className="mt-1 flex flex-wrap gap-1.5">
           {subjects.length
             ? subjects.map((s) => (
@@ -86,7 +92,10 @@ const SingleStudentPage = async ({
         class: { include: { _count: { select: { lessons: true } } } },
         grade: { select: { level: true } },
         parent: { select: { name: true, surname: true } },
-        subjects: { select: { name: true }, orderBy: { name: "asc" } },
+        subjects: {
+          select: { subjectId: true, format: true, subject: { select: { name: true } } },
+          orderBy: { subject: { name: "asc" } },
+        },
         registration: true,
       },
     }),
@@ -228,11 +237,25 @@ const SingleStudentPage = async ({
             </div>
           </div>
         </div>
-        {(student.subjects.length > 0 || student.registration) && (
+        {(student.subjects.length > 0 || student.registration || role === "admin") && (
           <StudentRegistrationDetails
-            subjects={student.subjects.map((s) => s.name)}
+            subjects={student.subjects.map(
+              (s) => `${s.subject.name} · ${formatLabels[s.format]}`
+            )}
             registration={student.registration}
             showPrivate={role === "admin" || role === "teacher"}
+            editor={
+              role === "admin" && (
+                <StudentSubjectsEditor
+                  studentId={student.id}
+                  subjects={await prisma.subject.findMany({
+                    select: { id: true, name: true, delivery: true },
+                    orderBy: { name: "asc" },
+                  })}
+                  current={student.subjects.map((s) => ({ subjectId: s.subjectId, format: s.format }))}
+                />
+              )
+            }
           />
         )}
         {/* BOTTOM */}

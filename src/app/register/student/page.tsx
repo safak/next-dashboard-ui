@@ -6,7 +6,10 @@ import { getSettings } from "@/lib/schoolSettings";
 const StudentRegisterPage = async () => {
   const [grades, subjects, { schoolName }] = await Promise.all([
     prisma.grade.findMany({ orderBy: { level: "asc" }, select: { id: true, level: true } }),
-    prisma.subject.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.subject.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, delivery: true },
+    }),
     getSettings(),
   ]);
 
