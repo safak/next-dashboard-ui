@@ -106,3 +106,42 @@ export const resetPassword = async (
 
   return { success: true, error: false, username: user.username, temporaryPassword: password };
 };
+
+// GRADES: a new school needs these before classes and registrations work
+
+export const addGrade = async (_state: State, formData: FormData): Promise<State> => {
+  if (!(await isAdmin())) return NOT_ALLOWED;
+  const level = parseInt(String(formData.get("level")));
+  if (!Number.isInteger(level) || level < 0 || level > 13) {
+    return { success: false, error: true, message: "Enter a grade from 0 (Grade R) to 13." };
+  }
+  if (await prisma.grade.findUnique({ where: { level } })) {
+    return { success: false, error: true, message: `Grade ${level} already exists.` };
+  }
+  await prisma.grade.create({ data: { level } });
+  revalidatePath("/settings");
+  return { success: true, error: false };
+};
+
+export const deleteGrade = async (_state: State, formData: FormData): Promise<State> => {
+  if (!(await isAdmin())) return NOT_ALLOWED;
+  const id = parseInt(String(formData.get("id")));
+  const grade = await prisma.grade.findUnique({
+    where: { id },
+    include: {
+      _count: { select: { classes: true, students: true, registrations: true, materials: true } },
+    },
+  });
+  if (!grade) return { success: false, error: true, message: "That grade no longer exists." };
+  const used = Object.values(grade._count).reduce((a, b) => a + b, 0);
+  if (used > 0) {
+    return {
+      success: false,
+      error: true,
+      message: `Grade ${grade.level} still has classes, learners, registrations or materials.`,
+    };
+  }
+  await prisma.grade.delete({ where: { id } });
+  revalidatePath("/settings");
+  return { success: true, error: false };
+};

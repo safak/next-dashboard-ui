@@ -246,6 +246,21 @@ model Setting {
   paymentDueDay          Int     @default(7)
   // Printed on invoices and statements so parents know where to pay
   bankDetails            String?
+  // PUBLIC WEBSITE (empty fields fall back to built-in wording)
+  tagline                String?
+  aboutText              String?
+  missionText            String?
+  contactPhone           String?
+  contactEmail           String?
+  address                String?
+  // Digits only with country code, e.g. 27821234567, for wa.me links
+  whatsapp               String?
+  officeHours            String?
+  showFeesPublicly       Boolean @default(false)
+  // BRANDING: accent colour of the public website, and an uploaded logo
+  // (stored like study materials, see src/lib/branding.ts)
+  brandColor             String  @default("#4f46e5")
+  logoFile               String?
 }
 
 // Optional weekly sessions students sign up for. Times are "HH:MM" strings
@@ -482,4 +497,33 @@ model Payment {
   student      Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@index([studentId])
+}
+
+enum EnquiryKind {
+  // A school interested in using this system
+  SCHOOL_DEMO
+  // A parent or learner using the contact form
+  GENERAL
+}
+
+enum EnquiryStatus {
+  NEW
+  CONTACTED
+  CLOSED
+}
+
+model Enquiry {
+  id           Int           @id @default(autoincrement())
+  kind         EnquiryKind
+  name         String
+  email        String
+  phone        String?
+  organisation String?
+  role         String?
+  learners     Int?
+  message      String
+  status       EnquiryStatus @default(NEW)
+  createdAt    DateTime      @default(now())
+
+  @@index([status])
 }

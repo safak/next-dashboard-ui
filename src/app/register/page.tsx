@@ -32,7 +32,7 @@ const RegisterPage = () => (
         </Link>
       ))}
     </div>
-    <Link href="/" className="text-sm text-gray-500 hover:text-gray-700 w-fit">
+    <Link href="/sign-in" className="text-sm text-gray-500 hover:text-gray-700 w-fit">
       Already have an account? Sign in
     </Link>
   </>

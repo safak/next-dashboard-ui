@@ -6,8 +6,8 @@ import { ToastContainer } from "react-toastify";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Capital Mathematics Studies",
-  description: "School management for Capital Mathematics Studies",
+  title: { default: "Capital Mathematics Studies", template: "%s" },
+  description: "Mathematics and science tutoring: one-on-one, groups, house calls and online.",
 };
 
 export default function RootLayout({
