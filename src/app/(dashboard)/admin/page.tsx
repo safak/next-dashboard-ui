@@ -3,7 +3,7 @@ import AttendanceChartContainer from "@/components/AttendanceChartContainer";
 import CountChartContainer from "@/components/CountChartContainer";
 import EventCalendarContainer from "@/components/EventCalendarContainer";
 
-import FinanceChart from "@/components/FinanceChart";
+import ScoreTrendChartContainer from "@/components/ScoreTrendChartContainer";
 import UserCard from "@/components/UserCard";
 
 const AdminPage = async ({
@@ -35,7 +35,7 @@ const AdminPage = async ({
         </div>
         {/* BOTTOM CHART */}
         <div className="w-full h-[500px]">
-          <FinanceChart />
+          <ScoreTrendChartContainer />
         </div>
       </div>
       {/* RIGHT */}

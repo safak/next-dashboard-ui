@@ -1,3 +1,5 @@
+import ListControls from "@/components/ListControls";
+import { resolveOrderBy, SortMap, sortOptions, toOptions } from "@/lib/listQuery";
 import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
@@ -6,9 +8,15 @@ import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Class, Event, Prisma } from "@prisma/client";
 import Image from "next/image";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
 
 type EventList = Event & { class: Class };
+
+const SORTS: SortMap<Prisma.EventOrderByWithRelationInput> = {
+  "date-desc": { label: "Latest first", orderBy: { startTime: "desc" } },
+  "date-asc": { label: "Earliest first", orderBy: { startTime: "asc" } },
+  title: { label: "Title (A–Z)", orderBy: { title: "asc" } },
+};
 
 const EventListPage = async ({
   searchParams,
@@ -16,8 +24,7 @@ const EventListPage = async ({
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
 
-  const { userId, sessionClaims } =await auth();
-  const role = (sessionClaims?.metadata as { role?: string })?.role;
+  const { userId, role } = await auth();
   const currentUserId = userId;
 
   const columns = [
@@ -103,6 +110,9 @@ const EventListPage = async ({
     for (const [key, value] of Object.entries(queryParams)) {
       if (value !== undefined) {
         switch (key) {
+          case "classId":
+            query.classId = value === "none" ? null : parseInt(value);
+            break;
           case "search":
             query.title = { contains: value };
             break;
@@ -131,6 +141,7 @@ const EventListPage = async ({
   const [data, count] = await prisma.$transaction([
     prisma.event.findMany({
       where: query,
+      orderBy: resolveOrderBy(SORTS, queryParams.sort),
       include: {
         class: true,
       },
@@ -140,6 +151,8 @@ const EventListPage = async ({
     prisma.event.count({ where: query }),
   ]);
 
+  const classes = role === "admin" || role === "teacher" ? await prisma.class.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }) : [];
+
   return (
     <div className="card p-4 flex-1 m-4 mt-0">
       {/* TOP */}
@@ -148,12 +161,12 @@ const EventListPage = async ({
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/filter.png" alt="" width={14} height={14} />
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/sort.png" alt="" width={14} height={14} />
-            </button>
+            <ListControls
+              filters={role === "admin" || role === "teacher"
+                ? [{ key: "classId", label: "Class", options: [{ value: "none", label: "Whole school" }, ...toOptions(classes, (c) => c.name)] }]
+                : []}
+              sorts={sortOptions(SORTS)}
+            />
             {role === "admin" && <FormContainer table="event" type="create" />}
           </div>
         </div>

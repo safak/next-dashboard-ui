@@ -4,8 +4,7 @@ import BigCalendar from "@/components/BigCalender";
 import FormContainer from "@/components/FormContainer";
 import Performance from "@/components/Performance";
 import prisma from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
-import { Teacher } from "@prisma/client";
+import { auth } from "@/lib/auth";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -18,25 +17,35 @@ const SingleTeacherPage = async ({
   params: Promise<{ id: string }>;
 }) => {
   const { id } = await params;
-  const { sessionClaims } = await auth();
-  const role = (sessionClaims?.metadata as { role?: string })?.role;
+  const { role } = await auth();
 
-  const teacher:
-    | (Teacher & {
-        _count: { subjects: number; lessons: number; classes: number };
-      })
-    | null = await prisma.teacher.findUnique({
-    where: { id },
-    include: {
-      _count: {
-        select: {
-          subjects: true,
-          lessons: true,
-          classes: true,
+  const [teacher, performance] = await Promise.all([
+    prisma.teacher.findUnique({
+      where: { id },
+      include: {
+        subjects: { select: { name: true } },
+        classes: { select: { name: true } },
+        _count: {
+          select: {
+            subjects: true,
+            lessons: true,
+            classes: true,
+          },
         },
       },
-    },
-  });
+    }),
+    // Results for the exams and assignments of this teacher's lessons
+    prisma.result.aggregate({
+      where: {
+        OR: [
+          { exam: { lesson: { teacherId: id } } },
+          { assignment: { lesson: { teacherId: id } } },
+        ],
+      },
+      _avg: { score: true },
+      _count: true,
+    }),
+  ]);
 
   if (!teacher) {
     return notFound();
@@ -75,7 +84,11 @@ const SingleTeacherPage = async ({
                 )}
               </div>
               <p className="text-sm text-gray-500">
-                Lorem ipsum, dolor sit amet consectetur adipisicing elit.
+                {teacher.subjects.length > 0
+                  ? `Teaches ${teacher.subjects.map((s) => s.name).join(", ")}`
+                  : "No subjects assigned"}
+                {teacher.classes.length > 0 &&
+                  ` · Supervises ${teacher.classes.map((c) => c.name).join(", ")}`}
               </p>
               <div className="flex items-center justify-between gap-2 flex-wrap text-xs font-medium">
                 <div className="w-full md:w-1/3 lg:w-full 2xl:w-1/3 flex items-center gap-2">
@@ -208,7 +221,10 @@ const SingleTeacherPage = async ({
             </Link>
           </div>
         </div>
-        <Performance />
+        <Performance
+          average={performance._avg.score}
+          count={performance._count}
+        />
         <Announcements />
       </div>
       </div>

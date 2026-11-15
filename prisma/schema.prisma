@@ -9,69 +9,88 @@ datasource db {
   url      = "file:./dev.db"
 }
 
+// Login accounts. The id matches the person's Admin/Teacher/Student/Parent
+// row, and password is a bcrypt hash.
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  role      String
+  createdAt DateTime @default(now())
+}
+
 model Admin {
   id       String @id @default(cuid())
   username String @unique
 }
 
 model Student {
-  id          String       @id @default(cuid())
-  username    String       @unique
-  name        String
-  surname     String
-  email       String?      @unique
-  phone       String?      @unique
-  address     String
-  img         String?
-  bloodType   String
-  sex         UserSex
-  birthday    DateTime
-  createdAt   DateTime     @default(now())
-  parentId    String
-  classId     Int
-  gradeId     Int
-  attendances Attendance[]
-  results     Result[]
-  class       Class        @relation(fields: [classId], references: [id])
-  grade       Grade        @relation(fields: [gradeId], references: [id])
-  parent      Parent       @relation(fields: [parentId], references: [id])
+  id                      String                   @id @default(cuid())
+  extraClassRegistrations ExtraClassRegistration[]
+  username                String                   @unique
+  name                    String
+  surname                 String
+  email                   String?                  @unique
+  phone                   String?                  @unique
+  address                 String
+  img                     String?
+  bloodType               String
+  sex                     UserSex
+  birthday                DateTime
+  createdAt               DateTime                 @default(now())
+  // Given out when the student registers; parents quote it to link up
+  studentNumber           String?                  @unique
+  // Empty until a parent links themselves with the student number
+  parentId                String?
+  classId                 Int
+  gradeId                 Int
+  attendances             Attendance[]
+  results                 Result[]
+  subjects                Subject[]                @relation("StudentSubjects")
+  registration            StudentRegistration?
+  class                   Class                    @relation(fields: [classId], references: [id])
+  grade                   Grade                    @relation(fields: [gradeId], references: [id])
+  parent                  Parent?                  @relation(fields: [parentId], references: [id])
 }
 
 model Teacher {
-  id        String    @id @default(cuid())
-  username  String    @unique
-  name      String
-  surname   String
-  email     String?   @unique
-  phone     String?   @unique
-  address   String
-  img       String?
-  bloodType String
-  sex       UserSex
-  birthday  DateTime
-  createdAt DateTime  @default(now())
-  classes   Class[]   @relation("ClassSupervisor")
-  lessons   Lesson[]
-  subjects  Subject[] @relation("SubjectToTeacher")
+  id           String       @id @default(cuid())
+  extraClasses ExtraClass[]
+  username     String       @unique
+  name         String
+  surname      String
+  email        String?      @unique
+  phone        String?      @unique
+  address      String
+  img          String?
+  bloodType    String
+  sex          UserSex
+  birthday     DateTime
+  createdAt    DateTime     @default(now())
+  classes      Class[]      @relation("ClassSupervisor")
+  lessons      Lesson[]
+  subjects     Subject[]    @relation("SubjectToTeacher")
 }
 
 model Parent {
-  id        String    @id @default(cuid())
-  username  String    @unique
-  name      String
-  surname   String
-  email     String?   @unique
-  phone     String    @unique
-  address   String
-  createdAt DateTime  @default(now())
-  students  Student[]
+  id            String                @id @default(cuid())
+  username      String                @unique
+  name          String
+  surname       String
+  email         String?               @unique
+  phone         String                @unique
+  address       String
+  createdAt     DateTime              @default(now())
+  students      Student[]
+  registrations StudentRegistration[]
 }
 
 model Grade {
-  id       Int       @id @default(autoincrement())
-  level    Int       @unique
-  classes  Class[]
-  students Student[]
+  id            Int                   @id @default(autoincrement())
+  level         Int                   @unique
+  classes       Class[]
+  students      Student[]
+  registrations StudentRegistration[]
 }
 
 model Class {
@@ -89,10 +108,13 @@ model Class {
 }
 
 model Subject {
-  id       Int       @id @default(autoincrement())
-  name     String    @unique
-  lessons  Lesson[]
-  teachers Teacher[] @relation("SubjectToTeacher")
+  id            Int                   @id @default(autoincrement())
+  extraClasses  ExtraClass[]
+  name          String                @unique
+  lessons       Lesson[]
+  teachers      Teacher[]             @relation("SubjectToTeacher")
+  students      Student[]             @relation("StudentSubjects")
+  registrations StudentRegistration[] @relation("RegistrationSubjects")
 }
 
 model Lesson {
@@ -183,4 +205,104 @@ enum Day {
   WEDNESDAY
   THURSDAY
   FRIDAY
+}
+
+// senderId and receiverId are User ids
+model Message {
+  id         Int      @id @default(autoincrement())
+  senderId   String
+  receiverId String
+  subject    String
+  body       String
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([receiverId])
+  @@index([senderId])
+}
+
+// Single-row table (id = 1) for school-wide settings
+model Setting {
+  id           Int    @id @default(1)
+  schoolName   String @default("School Name")
+  academicYear String @default("2025/26")
+}
+
+// Optional weekly sessions students sign up for. Times are "HH:MM" strings
+// so they read the same in every timezone.
+model ExtraClass {
+  id            Int                      @id @default(autoincrement())
+  name          String
+  description   String?
+  day           Day
+  startTime     String
+  endTime       String
+  capacity      Int
+  subjectId     Int
+  teacherId     String
+  createdAt     DateTime                 @default(now())
+  subject       Subject                  @relation(fields: [subjectId], references: [id])
+  teacher       Teacher                  @relation(fields: [teacherId], references: [id])
+  registrations ExtraClassRegistration[]
+}
+
+model ExtraClassRegistration {
+  id           Int        @id @default(autoincrement())
+  extraClassId Int
+  studentId    String
+  createdAt    DateTime   @default(now())
+  extraClass   ExtraClass @relation(fields: [extraClassId], references: [id], onDelete: Cascade)
+  student      Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([extraClassId, studentId])
+  @@index([studentId])
+}
+
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// A student's own registration. It waits as PENDING until an admin assigns
+// a class and approves it, which creates the Student and their login. The
+// row is kept afterwards as the record of the signed contract.
+model StudentRegistration {
+  id                   String             @id @default(cuid())
+  studentNumber        String             @unique
+  status               RegistrationStatus @default(PENDING)
+  username             String
+  password             String // bcrypt hash, copied to User on approval
+  name                 String
+  surname              String
+  email                String?
+  phone                String?
+  address              String
+  bloodType            String
+  sex                  UserSex
+  birthday             DateTime
+  gradeId              Int
+  previousSchool       String?
+  lastGradeCompleted   String?
+  medicalNotes         String?
+  guardianName         String
+  guardianRelationship String
+  guardianPhone        String
+  guardianEmail        String?
+  contractVersion      String
+  contractSignature    String
+  contractSignedAt     DateTime
+  // A parent may link with the student number before approval
+  parentId             String?
+  studentId            String?            @unique
+  reviewedAt           DateTime?
+  rejectionReason      String?
+  createdAt            DateTime           @default(now())
+  grade                Grade              @relation(fields: [gradeId], references: [id])
+  parent               Parent?            @relation(fields: [parentId], references: [id], onDelete: SetNull)
+  student              Student?           @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  subjects             Subject[]          @relation("RegistrationSubjects")
+
+  @@index([status])
+  @@index([username])
 }

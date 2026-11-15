@@ -10,8 +10,10 @@ import {
   deleteAttendance,
   deleteClass,
   deleteEvent,
+  deleteExtraClass,
   deleteExam,
   deleteLesson,
+  deleteMessage,
   deleteParent,
   deleteResult,
   deleteStudent,
@@ -50,6 +52,12 @@ const AttendanceForm = dynamic(() => import("./forms/AttendanceForm"), {
   loading: () => <h1>Loading...</h1>,
 });
 const EventForm = dynamic(() => import("./forms/EventForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const ExtraClassForm = dynamic(() => import("./forms/ExtraClassForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const MessageForm = dynamic(() => import("./forms/MessageForm"), {
   loading: () => <h1>Loading...</h1>,
 });
 const AnnouncementForm = dynamic(() => import("./forms/AnnouncementForm"), {
@@ -97,6 +105,12 @@ const forms: {
   event: (type, data, setOpen, relatedData) => (
     <EventForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
   ),
+  extraClass: (type, data, setOpen, relatedData) => (
+    <ExtraClassForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
+  ),
+  message: (type, data, setOpen, relatedData) => (
+    <MessageForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
+  ),
   announcement: (type, data, setOpen, relatedData) => (
     <AnnouncementForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
   ),
@@ -120,6 +134,8 @@ const deleteActions: {
   attendance: deleteAttendance,
   event: deleteEvent,
   announcement: deleteAnnouncement,
+  message: deleteMessage,
+  extraClass: deleteExtraClass,
 };
 
 const FormModal = ({
@@ -141,7 +157,9 @@ const FormModal = ({
     | "result"
     | "attendance"
     | "event"
-    | "announcement";
+    | "announcement"
+    | "message"
+    | "extraClass";
   type: "create" | "update" | "delete";
   data?: any;
   id?: number | string;

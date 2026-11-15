@@ -1,16 +1,9 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 const SigninPage = async () => {
-  const { userId } = await auth();
-
-  if (userId) {
-    const user = await currentUser();
-    const role = (user?.publicMetadata as { role?: string })?.role;
-    redirect(role ? `/${role}` : "/admin");
-  }
-
-  redirect("/");
+  const { role } = await auth();
+  redirect(role ? `/${role}` : "/");
 };
 
 export default SigninPage;

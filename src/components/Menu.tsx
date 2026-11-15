@@ -1,4 +1,4 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
 import MenuLink from "./MenuLink";
 import MenuLogout from "./MenuLogout";
 
@@ -25,6 +25,12 @@ const menuItems = [
         visible: ["admin", "teacher"],
       },
       {
+        icon: "/create.png",
+        label: "Registrations",
+        href: "/list/registrations",
+        visible: ["admin"],
+      },
+      {
         icon: "/parent.png",
         label: "Parents",
         href: "/list/parents",
@@ -47,6 +53,12 @@ const menuItems = [
         label: "Lessons",
         href: "/list/lessons",
         visible: ["admin", "teacher"],
+      },
+      {
+        icon: "/singleLesson.png",
+        label: "Extra Classes",
+        href: "/list/extra-classes",
+        visible: ["admin", "teacher", "student", "parent"],
       },
       {
         icon: "/exam.png",
@@ -118,8 +130,7 @@ const menuItems = [
 ];
 
 const Menu = async () => {
-  const user = await currentUser();
-  const role = user?.publicMetadata.role as string;
+  const role = (await auth()).role ?? "";
   const homeHref = role ? `/${role}` : "/";
 
   const getHref = (href: string) => {

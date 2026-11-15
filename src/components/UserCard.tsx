@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { getSettings } from "@/lib/schoolSettings";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -22,6 +23,7 @@ const UserCard = async ({
   };
 
   const data = await modelMap[type].count();
+  const { academicYear } = await getSettings();
 
   return (
     <Link
@@ -30,7 +32,7 @@ const UserCard = async ({
     >
       <div className="flex justify-between items-center">
         <span className="text-[10px] bg-white px-2 py-1 rounded-full text-green-600">
-          2024/25
+          {academicYear}
         </span>
         <Image src="/more.png" alt="" width={20} height={20} />
       </div>

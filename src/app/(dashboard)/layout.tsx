@@ -1,17 +1,18 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
 import Image from "next/image";
 import Link from "next/link";
 import Menu from "@/components/Menu";
 import Navbar from "@/components/Navbar";
+import { getSettings } from "@/lib/schoolSettings";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await currentUser();
-  const role = user?.publicMetadata?.role as string;
+  const { role } = await auth();
   const homeHref = role ? `/${role}` : "/";
+  const { schoolName } = await getSettings();
 
   return (
     <div className="h-screen flex">
@@ -22,7 +23,7 @@ export default async function DashboardLayout({
         >
           <Image src="/logo.png" alt="logo" width={32} height={32} />
           <span className="hidden lg:block font-semibold text-gray-800">
-            School Name
+            {schoolName}
           </span>
         </Link>
         <Menu />

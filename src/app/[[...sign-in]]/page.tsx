@@ -1,19 +1,17 @@
-import { SignIn } from "@clerk/nextjs";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import SignInForm from "@/components/forms/SignInForm";
+import { auth } from "@/lib/auth";
+import { getSettings } from "@/lib/schoolSettings";
 import { redirect } from "next/navigation";
 
 const LoginPage = async () => {
-  const { userId } = await auth();
+  const { role } = await auth();
+  if (role) redirect(`/${role}`);
 
-  if (userId) {
-    const user = await currentUser();
-    const role = (user?.publicMetadata as { role?: string })?.role;
-    redirect(role ? `/${role}` : "/admin");
-  }
+  const { schoolName } = await getSettings();
 
   return (
-    <div className="h-screen flex items-center justify-center bg-lamaSkyLight">
-      <SignIn fallbackRedirectUrl="/admin" />
+    <div className="min-h-screen flex items-center justify-center bg-lamaSkyLight p-4">
+      <SignInForm schoolName={schoolName} />
     </div>
   );
 };
