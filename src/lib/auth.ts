@@ -16,8 +16,8 @@ export type AuthResult = {
 };
 
 // The signed cookie proves who the user is; the database lookup makes
-// deleted accounts and role changes take effect straight away. cache()
-// runs this once per request however many components call it.
+// deleted accounts, role changes and password changes take effect straight
+// away. cache() runs this once per request however many components call it.
 export const auth = cache(async (): Promise<AuthResult> => {
   const session = await verifySession(
     (await cookies()).get(SESSION_COOKIE)?.value
@@ -26,9 +26,15 @@ export const auth = cache(async (): Promise<AuthResult> => {
 
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { id: true, role: true, username: true },
+    select: { id: true, role: true, username: true, passwordChangedAt: true },
   });
-  if (!user) return { userId: null, role: undefined, username: undefined };
+  // A session from before the latest password change has been revoked
+  if (
+    !user ||
+    session.issuedAt < Math.floor(user.passwordChangedAt.getTime() / 1000)
+  ) {
+    return { userId: null, role: undefined, username: undefined };
+  }
 
   return { userId: user.id, role: user.role, username: user.username };
 });
@@ -51,12 +57,16 @@ export const getDisplayName = cache(async () => {
   return person ? `${person.name} ${person.surname}` : username ?? "User";
 });
 
-export const createSession = async (userId: string, role: string) => {
+export const createSession = async (
+  userId: string,
+  role: string,
+  mustChangePassword = false
+) => {
   // Secure cookies are dropped over plain http, which would break signing
   // in from another device on the local network (http://192.168.x.x)
   const https = (await headers()).get("x-forwarded-proto") === "https";
 
-  (await cookies()).set(SESSION_COOKIE, await signSession({ userId, role }), {
+  (await cookies()).set(SESSION_COOKIE, await signSession({ userId, role, mustChangePassword }), {
     httpOnly: true,
     secure: https,
     sameSite: "lax",

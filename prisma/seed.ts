@@ -11,6 +11,10 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
+  await prisma.setting.create({
+    data: { id: 1, schoolName: "Capital Mathematics Studies" },
+  });
+
   // ADMIN
   await prisma.admin.create({
     data: {
@@ -46,17 +50,20 @@ async function main() {
   }
 
   // SUBJECT
+  // Delivery defaults to online & in person; admins change it per subject
   const subjectData = [
     { name: "Mathematics" },
-    { name: "Science" },
-    { name: "English" },
-    { name: "History" },
+    { name: "Mathematical Literacy" },
+    { name: "Technical Mathematics" },
+    { name: "Physical Sciences" },
+    { name: "Life Sciences" },
     { name: "Geography" },
-    { name: "Physics" },
-    { name: "Chemistry" },
-    { name: "Biology" },
-    { name: "Computer Science" },
-    { name: "Art" },
+    { name: "Accounting" },
+    { name: "Economics" },
+    { name: "Business Studies" },
+    { name: "Engineering Graphics and Design (EGD)" },
+    { name: "Programming" },
+    { name: "Computer Applications Technology (CAT)" },
   ];
 
   for (const subject of subjectData) {

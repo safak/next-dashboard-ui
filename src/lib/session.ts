@@ -5,7 +5,14 @@ import { jwtVerify, SignJWT } from "jose";
 export const SESSION_COOKIE = "session";
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 days, in seconds
 
-export type SessionPayload = { userId: string; role: string };
+export type SessionPayload = {
+  userId: string;
+  role: string;
+  // Until they choose their own password, the proxy keeps them on /profile
+  mustChangePassword?: boolean;
+};
+
+export type VerifiedSession = SessionPayload & { issuedAt: number };
 
 const getKey = () => {
   const secret = process.env.AUTH_SECRET;
@@ -14,7 +21,7 @@ const getKey = () => {
 };
 
 export const signSession = (payload: SessionPayload) =>
-  new SignJWT({ role: payload.role })
+  new SignJWT({ role: payload.role, mcp: !!payload.mustChangePassword })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(payload.userId)
     .setIssuedAt()
@@ -23,14 +30,21 @@ export const signSession = (payload: SessionPayload) =>
 
 export const verifySession = async (
   token?: string
-): Promise<SessionPayload | null> => {
+): Promise<VerifiedSession | null> => {
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, getKey(), {
       algorithms: ["HS256"],
     });
-    if (!payload.sub || typeof payload.role !== "string") return null;
-    return { userId: payload.sub, role: payload.role };
+    if (!payload.sub || typeof payload.role !== "string" || !payload.iat) {
+      return null;
+    }
+    return {
+      userId: payload.sub,
+      role: payload.role,
+      mustChangePassword: payload.mcp === true,
+      issuedAt: payload.iat,
+    };
   } catch {
     return null;
   }

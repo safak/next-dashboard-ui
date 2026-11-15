@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import InputField from "../InputField";
 import { subjectSchema, SubjectSchema } from "@/lib/formValidationSchemas";
 import { createSubject, updateSubject } from "@/lib/actions";
+import { DELIVERY_MODES, deliveryLabels } from "@/lib/subjectDelivery";
 import { useFormState } from "react-dom";
 import { Dispatch, SetStateAction, useEffect } from "react";
 import { toast } from "react-toastify";
@@ -81,6 +82,29 @@ const SubjectForm = ({
           />
         )}
         <div className="flex flex-col gap-2 w-full md:w-1/4">
+          <label className="text-xs text-gray-500">Offered</label>
+          <select
+            className="form-control"
+            {...register("delivery")}
+            defaultValue={data?.delivery ?? "BOTH"}
+          >
+            {DELIVERY_MODES.map((mode) => (
+              <option value={mode} key={mode}>
+                {deliveryLabels[mode]}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-400">
+            Online subjects can be taken online; in-person ones as
+            one-on-one, group or house call.
+          </p>
+          {errors.delivery?.message && (
+            <p className="text-xs text-red-400">
+              {errors.delivery.message.toString()}
+            </p>
+          )}
+        </div>
+        <div className="flex flex-col gap-2 w-full md:w-1/4">
           <label className="text-xs text-gray-500">Teachers</label>
           <select
             multiple
@@ -104,7 +128,11 @@ const SubjectForm = ({
         </div>
       </div>
       {state.error && (
-        <span className="text-red-500">Something went wrong!</span>
+        <span className="text-red-500">
+          {"message" in state && state.message
+            ? state.message
+            : "Something went wrong!"}
+        </span>
       )}
       <button className="btn-primary">
         {type === "create" ? "Create" : "Update"}

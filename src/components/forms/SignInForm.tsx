@@ -57,6 +57,10 @@ const SignInForm = ({ schoolName }: { schoolName: string }) => {
         {pending ? "Signing in..." : "Sign in"}
       </button>
 
+      <p className="text-xs text-center text-gray-400 -mt-2">
+        Forgot your password? Ask the school office to reset it.
+      </p>
+
       <p className="text-sm text-center text-gray-500">
         New student or parent?{" "}
         <Link href="/register" className="font-medium text-indigo-600 hover:underline">

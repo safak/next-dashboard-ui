@@ -12,11 +12,16 @@ datasource db {
 // Login accounts. The id matches the person's Admin/Teacher/Student/Parent
 // row, and password is a bcrypt hash.
 model User {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  password  String
-  role      String
-  createdAt DateTime @default(now())
+  id                 String   @id @default(cuid())
+  username           String   @unique
+  password           String
+  role               String
+  createdAt          DateTime @default(now())
+  // Set when an admin sets the password; the user must choose their own
+  mustChangePassword Boolean  @default(false)
+  // Sessions issued before this are rejected, so changing a password signs
+  // out every other device
+  passwordChangedAt  DateTime @default(now())
 }
 
 model Admin {
@@ -46,7 +51,7 @@ model Student {
   gradeId                 Int
   attendances             Attendance[]
   results                 Result[]
-  subjects                Subject[]                @relation("StudentSubjects")
+  subjects                StudentSubject[]
   registration            StudentRegistration?
   class                   Class                    @relation(fields: [classId], references: [id])
   grade                   Grade                    @relation(fields: [gradeId], references: [id])
@@ -91,6 +96,7 @@ model Grade {
   classes       Class[]
   students      Student[]
   registrations StudentRegistration[]
+  materials     Material[]
 }
 
 model Class {
@@ -113,12 +119,15 @@ model Subject {
   name          String                @unique
   lessons       Lesson[]
   teachers      Teacher[]             @relation("SubjectToTeacher")
-  students      Student[]             @relation("StudentSubjects")
-  registrations StudentRegistration[] @relation("RegistrationSubjects")
+  students      StudentSubject[]
+  registrations RegistrationSubject[]
+  // How the school offers it; limits the lesson types students can pick
+  delivery      DeliveryMode          @default(BOTH)
+  materials     Material[]
 }
 
 model Lesson {
-  id          Int          @id @default(autoincrement())
+  id          Int            @id @default(autoincrement())
   name        String
   day         Day
   startTime   DateTime
@@ -129,9 +138,10 @@ model Lesson {
   assignments Assignment[]
   attendances Attendance[]
   exams       Exam[]
-  class       Class        @relation(fields: [classId], references: [id])
-  subject     Subject      @relation(fields: [subjectId], references: [id])
-  teacher     Teacher      @relation(fields: [teacherId], references: [id])
+  meeting     OnlineMeeting?
+  class       Class          @relation(fields: [classId], references: [id])
+  subject     Subject        @relation(fields: [subjectId], references: [id])
+  teacher     Teacher        @relation(fields: [teacherId], references: [id])
 }
 
 model Exam {
@@ -244,6 +254,7 @@ model ExtraClass {
   subject       Subject                  @relation(fields: [subjectId], references: [id])
   teacher       Teacher                  @relation(fields: [teacherId], references: [id])
   registrations ExtraClassRegistration[]
+  meeting       OnlineMeeting?
 }
 
 model ExtraClassRegistration {
@@ -268,9 +279,9 @@ enum RegistrationStatus {
 // a class and approves it, which creates the Student and their login. The
 // row is kept afterwards as the record of the signed contract.
 model StudentRegistration {
-  id                   String             @id @default(cuid())
-  studentNumber        String             @unique
-  status               RegistrationStatus @default(PENDING)
+  id                   String                @id @default(cuid())
+  studentNumber        String                @unique
+  status               RegistrationStatus    @default(PENDING)
   username             String
   password             String // bcrypt hash, copied to User on approval
   name                 String
@@ -294,15 +305,104 @@ model StudentRegistration {
   contractSignedAt     DateTime
   // A parent may link with the student number before approval
   parentId             String?
-  studentId            String?            @unique
+  studentId            String?               @unique
   reviewedAt           DateTime?
   rejectionReason      String?
-  createdAt            DateTime           @default(now())
-  grade                Grade              @relation(fields: [gradeId], references: [id])
-  parent               Parent?            @relation(fields: [parentId], references: [id], onDelete: SetNull)
-  student              Student?           @relation(fields: [studentId], references: [id], onDelete: SetNull)
-  subjects             Subject[]          @relation("RegistrationSubjects")
+  createdAt            DateTime              @default(now())
+  grade                Grade                 @relation(fields: [gradeId], references: [id])
+  parent               Parent?               @relation(fields: [parentId], references: [id], onDelete: SetNull)
+  student              Student?              @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  subjects             RegistrationSubject[]
 
   @@index([status])
   @@index([username])
+}
+
+enum DeliveryMode {
+  ONLINE
+  PHYSICAL
+  BOTH
+}
+
+enum LessonFormat {
+  ONE_ON_ONE
+  GROUP
+  HOUSE_CALL
+  ONLINE
+}
+
+// A subject a student takes, and how they're taught it
+model StudentSubject {
+  studentId String
+  subjectId Int
+  format    LessonFormat
+  student   Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject   Subject      @relation(fields: [subjectId], references: [id])
+
+  @@id([studentId, subjectId])
+  @@index([subjectId])
+}
+
+// A subject chosen on a registration; copied to StudentSubject on approval
+model RegistrationSubject {
+  registrationId String
+  subjectId      Int
+  format         LessonFormat
+  registration   StudentRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  subject        Subject             @relation(fields: [subjectId], references: [id])
+
+  @@id([registrationId, subjectId])
+  @@index([subjectId])
+}
+
+enum MeetingProvider {
+  ZOOM
+  TEAMS
+  OTHER
+}
+
+// The online meeting for a lesson or an extra class (exactly one is set).
+// externalId is the Zoom meeting id or Teams calendar event id, kept so the
+// meeting can be removed there too; empty for links pasted by hand.
+model OnlineMeeting {
+  id           Int             @id @default(autoincrement())
+  provider     MeetingProvider
+  joinUrl      String
+  passcode     String?
+  externalId   String?
+  lessonId     Int?            @unique
+  extraClassId Int?            @unique
+  createdById  String
+  createdAt    DateTime        @default(now())
+  lesson       Lesson?         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  extraClass   ExtraClass?     @relation(fields: [extraClassId], references: [id], onDelete: Cascade)
+}
+
+enum MaterialType {
+  STUDY_MATERIAL
+  QUESTION_PAPER
+  MEMORANDUM
+}
+
+// An uploaded file learners can download. The file itself lives in the
+// materials folder on the server (see src/lib/materials.ts) as storedName.
+model Material {
+  id           Int          @id @default(autoincrement())
+  title        String
+  description  String?
+  type         MaterialType
+  subjectId    Int
+  // Empty means the material is for every grade
+  gradeId      Int?
+  year         Int?
+  fileName     String
+  storedName   String       @unique
+  mimeType     String
+  size         Int
+  uploadedById String
+  createdAt    DateTime     @default(now())
+  subject      Subject      @relation(fields: [subjectId], references: [id])
+  grade        Grade?       @relation(fields: [gradeId], references: [id])
+
+  @@index([subjectId])
 }

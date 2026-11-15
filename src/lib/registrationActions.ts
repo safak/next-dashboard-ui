@@ -19,6 +19,26 @@ import {
 } from "./formValidationSchemas";
 import prisma from "./prisma";
 import { nextStudentNumber } from "./studentNumber";
+import { blockedFor, clientIp, recordAttempt, waitMessage } from "./rateLimit";
+
+// Wrong student number / date of birth pairs allowed per hour, so numbers
+// can't be tried one after another until a child matches
+const CHILD_GUESS_LIMIT = 10;
+// Registrations accepted per device/network per hour, against spam
+const REGISTRATION_LIMIT = 10;
+
+const childGuessKeys = async (userId?: string) => [
+  `child:ip:${await clientIp()}`,
+  ...(userId ? [`child:user:${userId}`] : []),
+];
+
+const childGuessWait = (keys: string[]) =>
+  Math.max(...keys.map((k) => blockedFor(k, CHILD_GUESS_LIMIT)));
+
+const recordChildGuess = (keys: string[], message: string) => {
+  if (message === NO_MATCH) keys.forEach((k) => recordAttempt(k, 60));
+};
+import { subjectChoicesProblem } from "./subjectChoices";
 
 type RegistrationState = {
   success: boolean;
@@ -115,6 +135,10 @@ export const registerStudent = async (
   }
   const d = parsed.data;
 
+  const registerKey = `register:ip:${await clientIp()}`;
+  const wait = blockedFor(registerKey, REGISTRATION_LIMIT);
+  if (wait) return fail(waitMessage("registrations from this device", wait));
+
   try {
     if (await isUsernameTaken(d.username)) {
       return fail("That username is already taken. Choose another one.");
@@ -122,6 +146,9 @@ export const registerStudent = async (
 
     const grade = await prisma.grade.findUnique({ where: { id: d.gradeId } });
     if (!grade) return fail("Choose the grade you are enrolling into.");
+
+    const subjectProblem = await subjectChoicesProblem(d.subjects);
+    if (subjectProblem) return fail(subjectProblem);
 
     const password = await bcrypt.hash(d.password, 10);
 
@@ -155,11 +182,15 @@ export const registerStudent = async (
               contractSignature: d.contractSignature,
               contractSignedAt: new Date(),
               subjects: {
-                connect: d.subjects.map((id) => ({ id: parseInt(id) })),
+                create: d.subjects.map(({ subjectId, format }) => ({
+                  subjectId,
+                  format,
+                })),
               },
             },
           })
         );
+        recordAttempt(registerKey, 60);
         revalidatePath("/list/registrations");
         return {
           success: true,
@@ -192,6 +223,10 @@ export const registerParent = async (
   const d = parsed.data;
   const id = randomUUID();
 
+  const guessKeys = await childGuessKeys();
+  const wait = childGuessWait(guessKeys);
+  if (wait) return fail(waitMessage("unmatched student numbers", wait));
+
   try {
     if (await isUsernameTaken(d.username)) {
       return fail("That username is already taken. Choose another one.");
@@ -219,7 +254,10 @@ export const registerParent = async (
       await linkChildToParent(tx, child, id);
     });
   } catch (err) {
-    if (err instanceof RegistrationError) return fail(err.message);
+    if (err instanceof RegistrationError) {
+      recordChildGuess(guessKeys, err.message);
+      return fail(err.message);
+    }
     console.log(err);
     return fail(errorMessage(err, "The registration could not be saved."));
   }
@@ -242,6 +280,10 @@ export const linkChild = async (
     return fail(parsed.error.issues[0]?.message ?? "Check the form and try again.");
   }
 
+  const guessKeys = await childGuessKeys(userId);
+  const wait = childGuessWait(guessKeys);
+  if (wait) return fail(waitMessage("unmatched student numbers", wait));
+
   try {
     await prisma.$transaction(async (tx) => {
       const child = await findChild(
@@ -253,7 +295,10 @@ export const linkChild = async (
       await linkChildToParent(tx, child, userId);
     });
   } catch (err) {
-    if (err instanceof RegistrationError) return fail(err.message);
+    if (err instanceof RegistrationError) {
+      recordChildGuess(guessKeys, err.message);
+      return fail(err.message);
+    }
     console.log(err);
     return fail("The child could not be linked. Please try again.");
   }
@@ -279,7 +324,7 @@ export const approveRegistration = async (
     await prisma.$transaction(async (tx) => {
       const reg = await tx.studentRegistration.findUnique({
         where: { id: parsed.data.id },
-        include: { subjects: { select: { id: true } } },
+        include: { subjects: { select: { subjectId: true, format: true } } },
       });
       if (!reg || reg.status !== "PENDING") {
         throw new RegistrationError("This registration has already been handled.");
@@ -316,7 +361,7 @@ export const approveRegistration = async (
           gradeId: reg.gradeId,
           classId: classItem.id,
           parentId: reg.parentId,
-          subjects: { connect: reg.subjects },
+          subjects: { create: reg.subjects },
         },
       });
       await tx.studentRegistration.update({

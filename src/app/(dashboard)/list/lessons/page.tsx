@@ -7,12 +7,15 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { Class, Lesson, Prisma, Subject, Teacher } from "@prisma/client";
+import { Class, Lesson, OnlineMeeting, Prisma, Subject, Teacher } from "@prisma/client";
+import MeetingButton from "@/components/MeetingButton";
+import { integrationStatus } from "@/lib/meetings";
 import Image from "next/image";
 import { auth } from "@/lib/auth";
 
 type LessonList = Lesson & { subject: Subject } & { class: Class } & {
   teacher: Teacher;
+  meeting: OnlineMeeting | null;
 };
 
 
@@ -28,7 +31,10 @@ const LessonListPage = async ({
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
 
-const { role } = await auth();
+const { userId, role } = await auth();
+const integrations = integrationStatus();
+const canManageMeeting = (item: LessonList) =>
+  role === "admin" || (role === "teacher" && item.teacherId === userId);
 
 
 const columns = [
@@ -45,7 +51,7 @@ const columns = [
     accessor: "teacher",
     className: "hidden md:table-cell",
   },
-  ...(role === "admin"
+  ...(role === "admin" || role === "teacher"
     ? [
         {
           header: "Actions",
@@ -67,6 +73,21 @@ const renderRow = (item: LessonList) => (
     </td>
     <td>
       <div className="flex items-center gap-2">
+        {canManageMeeting(item) && (
+          <MeetingButton
+            target={{ kind: "lesson", id: item.id }}
+            title={`${item.subject.name} · Class ${item.class.name}`}
+            meeting={
+              item.meeting && {
+                provider: item.meeting.provider,
+                joinUrl: item.meeting.joinUrl,
+                passcode: item.meeting.passcode,
+                managed: !!item.meeting.externalId,
+              }
+            }
+            integrations={integrations}
+          />
+        )}
         {role === "admin" && (
           <>
             <FormContainer table="lesson" type="update" data={item} />
@@ -123,6 +144,7 @@ const renderRow = (item: LessonList) => (
         subject: { select: { name: true } },
         class: { select: { name: true } },
         teacher: { select: { name: true, surname: true } },
+        meeting: true,
       },
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),

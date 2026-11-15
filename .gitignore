@@ -47,3 +47,6 @@ next-env.d.ts
 # local SQLite database
 /prisma/dev.db
 /prisma/dev.db-journal
+
+# uploaded study materials
+/storage

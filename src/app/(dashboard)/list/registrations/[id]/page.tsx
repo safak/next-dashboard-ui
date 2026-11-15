@@ -6,6 +6,7 @@ import {
   registrationStatusStyles,
 } from "@/lib/registrationStatus";
 import { getSettings } from "@/lib/schoolSettings";
+import { formatLabels } from "@/lib/subjectDelivery";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -36,7 +37,10 @@ const RegistrationPage = async ({ params }: { params: Promise<{ id: string }> })
     include: {
       grade: true,
       parent: { select: { name: true, surname: true, phone: true } },
-      subjects: { select: { name: true }, orderBy: { name: "asc" } },
+      subjects: {
+        select: { format: true, subject: { select: { name: true } } },
+        orderBy: { subject: { name: "asc" } },
+      },
       student: { select: { id: true, class: { select: { name: true } } } },
     },
   });
@@ -90,10 +94,20 @@ const RegistrationPage = async ({ params }: { params: Promise<{ id: string }> })
             <Detail label="Enrolling into" value={`Grade ${reg.grade.level}`} />
             <Detail label="Last grade completed" value={reg.lastGradeCompleted} />
             <Detail label="Previous school" value={reg.previousSchool} />
-            <Detail
-              label="Subjects"
-              value={reg.subjects.map((s) => s.name).join(", ")}
-            />
+            <div className="sm:col-span-2">
+              <Detail
+                label="Subjects and lesson types"
+                value={
+                  <span className="flex flex-wrap gap-1.5 mt-1">
+                    {reg.subjects.map((s) => (
+                      <span key={s.subject.name} className="rounded-full bg-lamaSkyLight px-2.5 py-0.5 text-xs">
+                        {s.subject.name} · {formatLabels[s.format]}
+                      </span>
+                    ))}
+                  </span>
+                }
+              />
+            </div>
             <div className="sm:col-span-2">
               <Detail
                 label="Medical conditions, allergies or special needs"
