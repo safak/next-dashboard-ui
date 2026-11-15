@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Menu from "@/components/Menu";
 import Navbar from "@/components/Navbar";
-import { getSettings } from "@/lib/schoolSettings";
+import { getSettings, siteContent } from "@/lib/schoolSettings";
 
 export default async function DashboardLayout({
   children,
@@ -14,9 +14,10 @@ export default async function DashboardLayout({
   const { role } = await auth();
   // The cookie looked valid to the proxy, but the account is gone or the
   // session was revoked by a password change
-  if (!role) redirect("/");
+  if (!role) redirect("/sign-in");
   const homeHref = role ? `/${role}` : "/";
-  const { schoolName } = await getSettings();
+  const settings = await getSettings();
+  const { schoolName } = settings;
 
   return (
     <div className="h-screen flex">
@@ -25,7 +26,7 @@ export default async function DashboardLayout({
           href={homeHref}
           className="flex items-center justify-center lg:justify-start gap-2 lg:px-3"
         >
-          <Image src="/logo.png" alt="logo" width={32} height={32} />
+          <Image src={siteContent(settings).logoUrl} alt="logo" width={32} height={32} unoptimized className="h-8 w-8 object-contain" />
           <span className="hidden lg:block font-semibold text-gray-800">
             {schoolName}
           </span>

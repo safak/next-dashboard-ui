@@ -31,6 +31,12 @@ const menuItems = [
         visible: ["admin"],
       },
       {
+        icon: "/mail.png",
+        label: "Enquiries",
+        href: "/list/enquiries",
+        visible: ["admin"],
+      },
+      {
         icon: "/parent.png",
         label: "Parents",
         href: "/list/parents",

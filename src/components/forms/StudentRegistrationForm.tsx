@@ -271,7 +271,7 @@ const StudentRegistrationForm = ({ grades, subjects, schoolName, terms }: Props)
       )}
 
       <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
-        <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
+        <Link href="/sign-in" className="text-sm text-gray-500 hover:text-gray-700">
           Already have an account? Sign in
         </Link>
         <button className="btn-primary" disabled={pending}>
@@ -313,7 +313,7 @@ const RegistrationReceived = ({ studentNumber }: { studentNumber: string }) => {
         Write this number down and give it to your parent or guardian. They need
         it, along with your date of birth, to create their parent account.
       </p>
-      <Link href="/" className="btn-primary mt-2">
+      <Link href="/sign-in" className="btn-primary mt-2">
         Back to sign in
       </Link>
     </div>

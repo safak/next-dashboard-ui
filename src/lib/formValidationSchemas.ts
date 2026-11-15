@@ -483,3 +483,45 @@ export const feeRatesSchema = z.object({
 });
 
 export type FeeRatesSchema = z.input<typeof feeRatesSchema>;
+
+// PUBLIC WEBSITE
+
+const optionalLine = (max: number) => z.string().trim().max(max).optional().or(z.literal(""));
+
+export const websiteSettingsSchema = z.object({
+  tagline: optionalLine(200),
+  aboutText: optionalLine(2000),
+  missionText: optionalLine(500),
+  contactPhone: optionalLine(40),
+  contactEmail: z.string().trim().email({ message: "Invalid email address!" }).optional().or(z.literal("")),
+  address: optionalLine(300),
+  whatsapp: z
+    .string()
+    .trim()
+    .regex(/^\d{8,15}$/, { message: "Digits only, with the country code (e.g. 27821234567)" })
+    .optional()
+    .or(z.literal("")),
+  officeHours: optionalLine(200),
+  showFeesPublicly: z.boolean(),
+  brandColor: z.string().regex(/^#[0-9a-fA-F]{6}$/, { message: "Pick a colour" }),
+});
+
+export type WebsiteSettingsSchema = z.input<typeof websiteSettingsSchema>;
+
+export const enquirySchema = z.object({
+  kind: z.enum(["SCHOOL_DEMO", "GENERAL"]),
+  name: z.string().trim().min(1, { message: "Your name is required!" }).max(100),
+  email: z.string().trim().email({ message: "Enter a valid email address!" }),
+  phone: optionalLine(40),
+  organisation: optionalLine(150),
+  role: optionalLine(100),
+  learners: z
+    .union([z.literal(""), z.coerce.number().int().min(1).max(100000)])
+    .optional(),
+  message: z.string().trim().min(5, { message: "Tell us a little more" }).max(3000),
+  // Hidden field people never see; bots fill it in. Accepted here so the
+  // action can quietly ignore them instead of telling them what went wrong.
+  website: z.string().max(500).optional(),
+});
+
+export type EnquirySchema = z.input<typeof enquirySchema>;

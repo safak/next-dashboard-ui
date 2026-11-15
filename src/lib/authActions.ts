@@ -64,7 +64,7 @@ export const signIn = async (
 
 export const signOut = async () => {
   await deleteSession();
-  redirect("/");
+  redirect("/sign-in");
 };
 
 export const changePassword = async (

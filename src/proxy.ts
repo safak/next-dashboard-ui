@@ -13,9 +13,9 @@ export default async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (!session) {
-    // Signed-out users may only see the sign-in page
+    // Signed-out users only see the public website and sign-in
     if (matchers.some(({ pattern }) => pattern.test(pathname))) {
-      return NextResponse.redirect(new URL("/", req.url));
+      return NextResponse.redirect(new URL("/sign-in", req.url));
     }
     return;
   }
@@ -23,7 +23,7 @@ export default async function proxy(req: NextRequest) {
   // A password set by an admin must be replaced before anything else. The
   // sign-in page stays reachable in case this session has been revoked.
   if (session.mustChangePassword) {
-    return pathname === "/profile" || pathname === "/"
+    return pathname === "/profile" || pathname === "/sign-in"
       ? undefined
       : NextResponse.redirect(new URL("/profile", req.url));
   }

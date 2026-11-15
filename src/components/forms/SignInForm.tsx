@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { signIn } from "@/lib/authActions";
 
-const SignInForm = ({ schoolName }: { schoolName: string }) => {
+const SignInForm = ({ schoolName, logoUrl }: { schoolName: string; logoUrl: string }) => {
   const [state, formAction, pending] = useActionState(signIn, {});
 
   return (
@@ -14,7 +14,7 @@ const SignInForm = ({ schoolName }: { schoolName: string }) => {
       className="card w-full max-w-sm p-8 flex flex-col gap-5"
     >
       <div className="flex flex-col items-center gap-2 text-center">
-        <Image src="/logo.png" alt="" width={40} height={40} />
+        <Image src={logoUrl} alt="" width={40} height={40} unoptimized className="h-10 w-10 object-contain" />
         <h1 className="text-xl font-semibold text-gray-800">{schoolName}</h1>
         <p className="text-sm text-gray-500">Sign in to your account</p>
       </div>
