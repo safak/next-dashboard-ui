@@ -176,9 +176,9 @@ const StudentForm = ({
           type="date"
         />
         <InputField
-          label="Parent Id"
+          label="Parent Id (optional)"
           name="parentId"
-          defaultValue={data?.parentId}
+          defaultValue={data?.parentId ?? ""}
           register={register}
           error={errors.parentId}
         />

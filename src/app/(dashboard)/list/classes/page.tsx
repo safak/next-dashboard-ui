@@ -1,3 +1,5 @@
+import ListControls from "@/components/ListControls";
+import { resolveOrderBy, SortMap, sortOptions, toOptions } from "@/lib/listQuery";
 import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
@@ -6,9 +8,16 @@ import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Class, Prisma, Teacher } from "@prisma/client";
 import Image from "next/image";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
 
 type ClassList = Class & { supervisor: Teacher };
+
+const SORTS: SortMap<Prisma.ClassOrderByWithRelationInput> = {
+  "name-asc": { label: "Name (A–Z)", orderBy: { name: "asc" } },
+  "name-desc": { label: "Name (Z–A)", orderBy: { name: "desc" } },
+  "capacity-desc": { label: "Largest capacity", orderBy: { capacity: "desc" } },
+  "capacity-asc": { label: "Smallest capacity", orderBy: { capacity: "asc" } },
+};
 
 const ClassListPage = async ({
   searchParams,
@@ -16,8 +25,7 @@ const ClassListPage = async ({
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
 
-const { sessionClaims } =await auth();
-const role = (sessionClaims?.metadata as { role?: string })?.role;
+const { role } = await auth();
 
 
 const columns = [
@@ -89,6 +97,9 @@ const renderRow = (item: ClassList) => (
           case "supervisorId":
             query.supervisorId = value;
             break;
+          case "gradeId":
+            query.gradeId = parseInt(value);
+            break;
           case "search":
             query.name = { contains: value };
             break;
@@ -102,6 +113,7 @@ const renderRow = (item: ClassList) => (
   const [data, count] = await prisma.$transaction([
     prisma.class.findMany({
       where: query,
+      orderBy: resolveOrderBy(SORTS, queryParams.sort),
       include: {
         supervisor: true,
       },
@@ -111,6 +123,8 @@ const renderRow = (item: ClassList) => (
     prisma.class.count({ where: query }),
   ]);
 
+  const [grades, teachers] = await Promise.all([prisma.grade.findMany({ select: { id: true, level: true }, orderBy: { level: "asc" } }), prisma.teacher.findMany({ select: { id: true, name: true, surname: true }, orderBy: { name: "asc" } })]);
+
   return (
     <div className="card p-4 flex-1 m-4 mt-0">
       {/* TOP */}
@@ -119,12 +133,13 @@ const renderRow = (item: ClassList) => (
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/filter.png" alt="" width={14} height={14} />
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/sort.png" alt="" width={14} height={14} />
-            </button>
+            <ListControls
+              filters={[
+                { key: "gradeId", label: "Grade", options: toOptions(grades, (g) => `Grade ${g.level}`) },
+                { key: "supervisorId", label: "Supervisor", options: toOptions(teachers, (t) => `${t.name} ${t.surname}`) },
+              ]}
+              sorts={sortOptions(SORTS)}
+            />
             {role === "admin" && <FormContainer table="class" type="create" />}
           </div>
         </div>

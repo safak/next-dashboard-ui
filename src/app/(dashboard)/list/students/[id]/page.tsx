@@ -5,8 +5,8 @@ import Performance from "@/components/Performance";
 import StudentAttendanceCard from "@/components/StudentAttendanceCard";
 
 import prisma from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
-import { Class, Student } from "@prisma/client";
+import { StudentRegistration } from "@prisma/client";
+import { auth } from "@/lib/auth";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -14,25 +14,88 @@ import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";
 
+const StudentRegistrationDetails = ({
+  subjects,
+  registration: reg,
+  showPrivate,
+}: {
+  subjects: string[];
+  registration: StudentRegistration | null;
+  showPrivate: boolean;
+}) => (
+  <div className="mt-4 card p-4 flex flex-col gap-4">
+    <h1 className="text-xl font-semibold">Registration details</h1>
+    <dl className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+      <div className="md:col-span-2">
+        <dt className="text-xs text-gray-500">Subjects</dt>
+        <dd className="mt-1 flex flex-wrap gap-1.5">
+          {subjects.length
+            ? subjects.map((s) => (
+                <span key={s} className="rounded-full bg-lamaSkyLight px-2.5 py-0.5 text-xs">
+                  {s}
+                </span>
+              ))
+            : "—"}
+        </dd>
+      </div>
+      {reg && showPrivate && (
+        <>
+          <div>
+            <dt className="text-xs text-gray-500">Guardian</dt>
+            <dd>
+              {reg.guardianName} ({reg.guardianRelationship}) · {reg.guardianPhone}
+              {reg.guardianEmail && ` · ${reg.guardianEmail}`}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-gray-500">Previous school</dt>
+            <dd>
+              {reg.previousSchool || "—"}
+              {reg.lastGradeCompleted && ` (completed ${reg.lastGradeCompleted})`}
+            </dd>
+          </div>
+          <div className="md:col-span-2">
+            <dt className="text-xs text-gray-500">Medical / special needs</dt>
+            <dd className="whitespace-pre-line">{reg.medicalNotes || "None given"}</dd>
+          </div>
+          <div className="md:col-span-2 text-xs text-gray-500">
+            Enrolment agreement signed by{" "}
+            <span className="font-serif italic text-sm text-gray-800">
+              {reg.contractSignature}
+            </span>{" "}
+            on {new Intl.DateTimeFormat("en-GB").format(reg.contractSignedAt)}
+          </div>
+        </>
+      )}
+    </dl>
+  </div>
+);
+
 const SingleStudentPage = async ({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) => {
   const { id } = await params;
-  const { sessionClaims } =await auth();
-  const role = (sessionClaims?.metadata as { role?: string })?.role;
+  const { role } = await auth();
 
-  const student:
-    | (Student & {
-        class: Class & { _count: { lessons: number } };
-      })
-    | null = await prisma.student.findUnique({
-    where: { id },
-    include: {
-      class: { include: { _count: { select: { lessons: true } } } },
-    },
-  });
+  const [student, performance] = await Promise.all([
+    prisma.student.findUnique({
+      where: { id },
+      include: {
+        class: { include: { _count: { select: { lessons: true } } } },
+        grade: { select: { level: true } },
+        parent: { select: { name: true, surname: true } },
+        subjects: { select: { name: true }, orderBy: { name: "asc" } },
+        registration: true,
+      },
+    }),
+    prisma.result.aggregate({
+      where: { studentId: id },
+      _avg: { score: true },
+      _count: true,
+    }),
+  ]);
 
   if (!student) {
     return notFound();
@@ -72,7 +135,13 @@ const SingleStudentPage = async ({
                 )}
               </div>
               <p className="text-sm text-gray-500">
-                Lorem ipsum, dolor sit amet consectetur adipisicing elit.
+                {student.studentNumber && (
+                  <span className="font-mono">{student.studentNumber} · </span>
+                )}
+                Class {student.class.name} · Grade {student.grade.level} · Parent:{" "}
+                {student.parent
+                  ? `${student.parent.name} ${student.parent.surname}`
+                  : "not linked yet"}
               </p>
               <div className="flex items-center justify-between gap-2 flex-wrap text-xs font-medium">
                 <div className="w-full md:w-1/3 lg:w-full 2xl:w-1/3 flex items-center gap-2">
@@ -159,6 +228,13 @@ const SingleStudentPage = async ({
             </div>
           </div>
         </div>
+        {(student.subjects.length > 0 || student.registration) && (
+          <StudentRegistrationDetails
+            subjects={student.subjects.map((s) => s.name)}
+            registration={student.registration}
+            showPrivate={role === "admin" || role === "teacher"}
+          />
+        )}
         {/* BOTTOM */}
         <div className="mt-4 card p-4">
           <h1>Student&apos;s Schedule</h1>
@@ -202,7 +278,10 @@ const SingleStudentPage = async ({
             </Link>
           </div>
         </div>
-        <Performance />
+        <Performance
+          average={performance._avg.score}
+          count={performance._count}
+        />
         <Announcements />
       </div>
       </div>

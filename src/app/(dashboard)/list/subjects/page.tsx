@@ -1,3 +1,5 @@
+import ListControls from "@/components/ListControls";
+import { resolveOrderBy, SortMap, sortOptions, toOptions } from "@/lib/listQuery";
 
 import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
@@ -7,17 +9,21 @@ import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Prisma, Subject, Teacher } from "@prisma/client";
 import Image from "next/image";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
 
 type SubjectList = Subject & { teachers: Teacher[] };
+
+const SORTS: SortMap<Prisma.SubjectOrderByWithRelationInput> = {
+  "name-asc": { label: "Name (A–Z)", orderBy: { name: "asc" } },
+  "name-desc": { label: "Name (Z–A)", orderBy: { name: "desc" } },
+};
 
 const SubjectListPage = async ({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
-  const { sessionClaims } = await auth();
-  const role = (sessionClaims?.metadata as { role?: string })?.role;
+  const { role } = await auth();
 
   const columns = [
     {
@@ -82,6 +88,7 @@ const SubjectListPage = async ({
   const [data, count] = await prisma.$transaction([
     prisma.subject.findMany({
       where: query,
+      orderBy: resolveOrderBy(SORTS, queryParams.sort),
       include: {
         teachers: true,
       },
@@ -99,12 +106,10 @@ const SubjectListPage = async ({
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/filter.png" alt="" width={14} height={14} />
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/sort.png" alt="" width={14} height={14} />
-            </button>
+            <ListControls
+              filters={[]}
+              sorts={sortOptions(SORTS)}
+            />
             {role === "admin" && (
               <FormContainer table="subject" type="create" />
             )}

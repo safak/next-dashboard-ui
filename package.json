@@ -9,12 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@clerk/nextjs": "^7.0.6",
     "@hookform/resolvers": "^5.2.2",
     "@libsql/client": "^0.15.15",
     "@prisma/adapter-libsql": "^6.19.2",
     "@prisma/client": "^6.19.2",
     "@types/react-big-calendar": "^1.16.3",
+    "bcryptjs": "^3.0.3",
+    "jose": "^6.2.17",
     "moment": "^2.30.1",
     "next": "^16.1.7",
     "next-cloudinary": "^6.17.5",

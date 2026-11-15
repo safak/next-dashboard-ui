@@ -1,3 +1,5 @@
+import ListControls from "@/components/ListControls";
+import { resolveOrderBy, SortMap, sortOptions, toOptions } from "@/lib/listQuery";
 import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
@@ -9,17 +11,22 @@ import { Class, Prisma, Student } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
 
 type StudentList = Student & { class: Class };
+
+const SORTS: SortMap<Prisma.StudentOrderByWithRelationInput> = {
+  "name-asc": { label: "Name (A–Z)", orderBy: { name: "asc" } },
+  "name-desc": { label: "Name (Z–A)", orderBy: { name: "desc" } },
+  newest: { label: "Newest first", orderBy: { createdAt: "desc" } },
+};
 
 const StudentListPage = async ({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
-  const { sessionClaims } =await auth();
-  const role = (sessionClaims?.metadata as { role?: string })?.role;
+  const { role } = await auth();
 
   const columns = [
     {
@@ -117,6 +124,12 @@ const StudentListPage = async ({
               },
             };
             break;
+          case "classId":
+            query.classId = parseInt(value);
+            break;
+          case "gradeId":
+            query.gradeId = parseInt(value);
+            break;
           case "search":
             query.name = { contains: value };
             break;
@@ -130,6 +143,7 @@ const StudentListPage = async ({
   const [data, count] = await prisma.$transaction([
     prisma.student.findMany({
       where: query,
+      orderBy: resolveOrderBy(SORTS, queryParams.sort),
       include: {
         class: true,
       },
@@ -139,6 +153,8 @@ const StudentListPage = async ({
     prisma.student.count({ where: query }),
   ]);
 
+  const [classes, grades] = await Promise.all([prisma.class.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }), prisma.grade.findMany({ select: { id: true, level: true }, orderBy: { level: "asc" } })]);
+
   return (
     <div className="card p-4 flex-1 m-4 mt-0">
       {/* TOP */}
@@ -147,12 +163,10 @@ const StudentListPage = async ({
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/filter.png" alt="" width={14} height={14} />
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/sort.png" alt="" width={14} height={14} />
-            </button>
+            <ListControls
+              filters={[{ key: "classId", label: "Class", options: toOptions(classes, (c) => c.name) }, { key: "gradeId", label: "Grade", options: toOptions(grades, (g) => `Grade ${g.level}`) }]}
+              sorts={sortOptions(SORTS)}
+            />
             {role === "admin" && (
               // <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               //   <Image src="/plus.png" alt="" width={14} height={14} />

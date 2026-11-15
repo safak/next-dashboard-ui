@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import FormModal from "./FormModal";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
+import { getContacts } from "@/lib/contacts";
 
 export type FormContainerProps = {
   table:
@@ -15,7 +16,9 @@ export type FormContainerProps = {
     | "result"
     | "attendance"
     | "event"
-    | "announcement";
+    | "announcement"
+    | "message"
+    | "extraClass";
   type: "create" | "update" | "delete";
   data?: any;
   id?: number | string;
@@ -24,8 +27,7 @@ export type FormContainerProps = {
 const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
   let relatedData = {};
 
-  const { userId, sessionClaims } = await auth();
-  const role = (sessionClaims?.metadata as { role?: string })?.role;
+  const { userId, role } = await auth();
   const currentUserId = userId;
 
   if (type !== "delete") {
@@ -145,6 +147,24 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
           students: attendanceStudents,
           lessons: attendanceLessons,
         };
+        break;
+      case "extraClass":
+        // Teachers can only create/move classes onto themselves
+        const [extraSubjects, extraTeachers] = await prisma.$transaction([
+          prisma.subject.findMany({
+            select: { id: true, name: true },
+            orderBy: { name: "asc" },
+          }),
+          prisma.teacher.findMany({
+            where: role === "teacher" ? { id: currentUserId! } : {},
+            select: { id: true, name: true, surname: true },
+            orderBy: { name: "asc" },
+          }),
+        ]);
+        relatedData = { subjects: extraSubjects, teachers: extraTeachers };
+        break;
+      case "message":
+        relatedData = { contacts: await getContacts(currentUserId!, role) };
         break;
       case "event":
       case "announcement":

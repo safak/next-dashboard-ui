@@ -1,3 +1,6 @@
+import ListControls from "@/components/ListControls";
+import { resolveOrderBy, SortMap, sortOptions, toOptions } from "@/lib/listQuery";
+import { Day } from "@prisma/client";
 import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
@@ -6,12 +9,18 @@ import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Class, Lesson, Prisma, Subject, Teacher } from "@prisma/client";
 import Image from "next/image";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
 
 type LessonList = Lesson & { subject: Subject } & { class: Class } & {
   teacher: Teacher;
 };
 
+
+const SORTS: SortMap<Prisma.LessonOrderByWithRelationInput> = {
+  subject: { label: "Subject", orderBy: { subject: { name: "asc" } } },
+  class: { label: "Class", orderBy: { class: { name: "asc" } } },
+  teacher: { label: "Teacher", orderBy: { teacher: { name: "asc" } } },
+};
 
 const LessonListPage = async ({
   searchParams,
@@ -19,8 +28,7 @@ const LessonListPage = async ({
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
 
-const { sessionClaims } =await auth();
-const role = (sessionClaims?.metadata as { role?: string })?.role;
+const { role } = await auth();
 
 
 const columns = [
@@ -88,6 +96,12 @@ const renderRow = (item: LessonList) => (
           case "teacherId":
             query.teacherId = value;
             break;
+          case "subjectId":
+            query.subjectId = parseInt(value);
+            break;
+          case "day":
+            query.day = value as Day;
+            break;
           case "search":
             query.OR = [
               { subject: { name: { contains: value } } },
@@ -104,6 +118,7 @@ const renderRow = (item: LessonList) => (
   const [data, count] = await prisma.$transaction([
     prisma.lesson.findMany({
       where: query,
+      orderBy: resolveOrderBy(SORTS, queryParams.sort),
       include: {
         subject: { select: { name: true } },
         class: { select: { name: true } },
@@ -115,6 +130,8 @@ const renderRow = (item: LessonList) => (
     prisma.lesson.count({ where: query }),
   ]);
 
+  const [classes, subjects, teachers] = await Promise.all([prisma.class.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }), prisma.subject.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }), prisma.teacher.findMany({ select: { id: true, name: true, surname: true }, orderBy: { name: "asc" } })]);
+
   return (
     <div className="card p-4 flex-1 m-4 mt-0">
       {/* TOP */}
@@ -123,12 +140,22 @@ const renderRow = (item: LessonList) => (
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/filter.png" alt="" width={14} height={14} />
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
-              <Image src="/sort.png" alt="" width={14} height={14} />
-            </button>
+            <ListControls
+              filters={[
+                { key: "classId", label: "Class", options: toOptions(classes, (c) => c.name) },
+                { key: "subjectId", label: "Subject", options: toOptions(subjects, (s) => s.name) },
+                { key: "teacherId", label: "Teacher", options: toOptions(teachers, (t) => `${t.name} ${t.surname}`) },
+                {
+                  key: "day",
+                  label: "Day",
+                  options: ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"].map((d) => ({
+                    value: d,
+                    label: d.charAt(0) + d.slice(1).toLowerCase(),
+                  })),
+                },
+              ]}
+              sorts={sortOptions(SORTS)}
+            />
             {role === "admin" && <FormContainer table="lesson" type="create" />}
           </div>
         </div>

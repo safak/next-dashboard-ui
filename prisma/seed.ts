@@ -1,6 +1,7 @@
 import { Day, PrismaClient, UserSex } from "@prisma/client";
 import { PrismaLibSQL } from "@prisma/adapter-libsql";
 import "dotenv/config";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient({
   adapter: new PrismaLibSQL({
@@ -121,6 +122,7 @@ async function main() {
     await prisma.student.create({
       data: {
         id: `student${i}`, 
+        studentNumber: `STU-${new Date().getFullYear()}-${String(i).padStart(4, "0")}`,
         username: `student${i}`, 
         name: `SName${i}`,
         surname: `SSurname ${i}`,
@@ -206,6 +208,20 @@ async function main() {
         date: new Date(), 
         classId: (i % 5) + 1, 
       },
+    });
+  }
+
+  // LOGIN ACCOUNTS (everyone starts with the same password)
+  const password = await bcrypt.hash("password123", 10);
+  const people = [
+    ...(await prisma.admin.findMany()).map((p) => ({ ...p, role: "admin" })),
+    ...(await prisma.teacher.findMany()).map((p) => ({ ...p, role: "teacher" })),
+    ...(await prisma.student.findMany()).map((p) => ({ ...p, role: "student" })),
+    ...(await prisma.parent.findMany()).map((p) => ({ ...p, role: "parent" })),
+  ];
+  for (const p of people) {
+    await prisma.user.create({
+      data: { id: p.id, username: p.username, password, role: p.role },
     });
   }
 

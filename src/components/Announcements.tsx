@@ -1,13 +1,9 @@
 import prisma from "@/lib/prisma";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
 import Link from "next/link";
 
 const Announcements = async () => {
-  const { userId } = await auth();
-const user = await currentUser();
-
-const role = (user?.publicMetadata as { role?: string })?.role;
-  
+  const { userId, role } = await auth();
 
   const roleConditions = {
     teacher: { lessons: { some: { teacherId: userId! } } },

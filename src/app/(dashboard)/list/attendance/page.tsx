@@ -1,3 +1,5 @@
+import ListControls from "@/components/ListControls";
+import { resolveOrderBy, SortMap, sortOptions, toOptions } from "@/lib/listQuery";
 import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
@@ -6,11 +8,17 @@ import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { Attendance, Lesson, Prisma, Student } from "@prisma/client";
 import Image from "next/image";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth";
 
 type AttendanceList = Attendance & {
   student: Student;
   lesson: Lesson;
+};
+
+const SORTS: SortMap<Prisma.AttendanceOrderByWithRelationInput> = {
+  "date-desc": { label: "Latest first", orderBy: { date: "desc" } },
+  "date-asc": { label: "Earliest first", orderBy: { date: "asc" } },
+  student: { label: "Student", orderBy: { student: { name: "asc" } } },
 };
 
 const AttendanceListPage = async ({
@@ -19,8 +27,7 @@ const AttendanceListPage = async ({
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) => {
   const resolvedSearchParams = await searchParams;
-  const { userId, sessionClaims } = await auth();
-  const role = (sessionClaims?.metadata as { role?: string })?.role;
+  const { userId, role } = await auth();
   const currentUserId = userId;
   const canEdit = role === "admin" || role === "teacher";
 
@@ -67,6 +74,12 @@ const AttendanceListPage = async ({
     for (const [key, value] of Object.entries(queryParams)) {
       if (value !== undefined) {
         switch (key) {
+          case "classId":
+            query.AND = [{ lesson: { classId: parseInt(value) } }];
+            break;
+          case "present":
+            query.present = value === "true";
+            break;
           case "search":
             query.student = {
               name: { contains: value },
@@ -90,16 +103,18 @@ const AttendanceListPage = async ({
   const [data, count] = await prisma.$transaction([
     prisma.attendance.findMany({
       where: query,
+      orderBy: resolveOrderBy(SORTS, queryParams.sort) ?? { date: "desc" },
       include: {
         student: true,
         lesson: true,
       },
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
-      orderBy: { date: "desc" },
     }),
     prisma.attendance.count({ where: query }),
   ]);
+
+  const classes = canEdit ? await prisma.class.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }) : [];
 
   return (
     <div className="card p-4 flex-1 m-4 mt-0">
@@ -108,18 +123,20 @@ const AttendanceListPage = async ({
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
-            <button
-              type="button"
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow"
-            >
-              <Image src="/filter.png" alt="" width={14} height={14} />
-            </button>
-            <button
-              type="button"
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow"
-            >
-              <Image src="/sort.png" alt="" width={14} height={14} />
-            </button>
+            <ListControls
+              filters={[
+                ...(canEdit ? [{ key: "classId", label: "Class", options: toOptions(classes, (c) => c.name) }] : []),
+                {
+                  key: "present",
+                  label: "Status",
+                  options: [
+                    { value: "true", label: "Present" },
+                    { value: "false", label: "Absent" },
+                  ],
+                },
+              ]}
+              sorts={sortOptions(SORTS)}
+            />
             {canEdit && <FormContainer table="attendance" type="create" />}
           </div>
         </div>
