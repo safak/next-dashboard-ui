@@ -8,13 +8,28 @@ const MenuLink = ({
   href,
   icon,
   label,
+  disabled,
 }: {
   href: string;
   icon: string;
   label: string;
+  disabled?: boolean;
 }) => {
   const pathname = usePathname();
   const active = pathname === href || pathname.startsWith(`${href}/`);
+
+  if (disabled) {
+    return (
+      <span
+        title={`${label} (change your password first)`}
+        aria-disabled="true"
+        className="flex items-center justify-center lg:justify-start gap-3 py-2 md:px-2 lg:px-3 rounded-lg text-gray-400 opacity-50 cursor-not-allowed"
+      >
+        <Image src={icon} alt="" width={20} height={20} />
+        <span className="hidden lg:block">{label}</span>
+      </span>
+    );
+  }
 
   return (
     <Link

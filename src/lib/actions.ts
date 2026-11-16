@@ -179,6 +179,7 @@ export const deleteSubject = async (
             students: true,
             registrations: true,
             materials: true,
+            playlists: true,
           },
         },
       },
@@ -189,6 +190,7 @@ export const deleteSubject = async (
       [_count.students, "enrolled student"],
       [_count.registrations, "registration"],
       [_count.materials, "study material"],
+      [_count.playlists, "video playlist"],
     ]
       .filter(([n]) => (n as number) > 0)
       .map(([n, what]) => `${n} ${what}${n === 1 ? "" : "s"}`);

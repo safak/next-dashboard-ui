@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { materialSchema } from "@/lib/formValidationSchemas";
 import { canUploadFor, materialsDir, storedPath } from "@/lib/materials";
-import { ALLOWED_FILES, MAX_UPLOAD_MB } from "@/lib/materialTypes";
+import { ALLOWED_FILES, IMAGE_FILES, MAX_UPLOAD_MB } from "@/lib/materialTypes";
 import prisma from "@/lib/prisma";
 
 // Uploads go through a route handler rather than a server action, which
@@ -47,6 +47,9 @@ export async function POST(request: Request) {
     return fail(parsed.error.issues[0]?.message ?? "Check the form and try again.");
   }
   const d = parsed.data;
+  if (d.type === "PICTURE" && !IMAGE_FILES.includes(ext)) {
+    return fail("A picture must be a PNG, JPG, WebP or GIF image.");
+  }
 
   if (!(await canUploadFor(role, userId, d.subjectId))) {
     return fail("You can only upload materials for subjects you teach.", 403);

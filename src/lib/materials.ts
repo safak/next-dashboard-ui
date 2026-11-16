@@ -1,6 +1,5 @@
 import "server-only";
 import path from "path";
-import { Prisma } from "@prisma/client";
 import prisma from "./prisma";
 
 // Uploaded files are kept outside /public so every download goes through
@@ -11,24 +10,31 @@ export const materialsDir = () =>
 export const storedPath = (storedName: string) =>
   path.join(materialsDir(), path.basename(storedName));
 
-// A learner sees materials for the subjects they registered for, in their
+// Filter on subject and grade that fits both materials and video playlists
+export type LearnerScope = {
+  OR?: LearnerScope[];
+  gradeId?: number | null;
+  subjectId?: { in: number[] };
+};
+
+// A learner sees materials and playlists for the subjects they registered for, in their
 // grade (or for all grades). Learners added before subject registration
 // existed have no subjects yet, so they see their grade's materials.
 const learnerWhere = (student: {
   gradeId: number;
   subjects: { subjectId: number }[];
-}): Prisma.MaterialWhereInput => ({
+}): LearnerScope => ({
   OR: [{ gradeId: null }, { gradeId: student.gradeId }],
   ...(student.subjects.length > 0 && {
     subjectId: { in: student.subjects.map((s) => s.subjectId) },
   }),
 });
 
-// Materials a user may see and download; null means none
+// Materials (and playlists) a user may see; null means none
 export const materialAccessWhere = async (
   role: string | undefined,
   userId: string | null
-): Promise<Prisma.MaterialWhereInput | null> => {
+): Promise<LearnerScope | null> => {
   if (!userId) return null;
   if (role === "admin" || role === "teacher") return {};
 
@@ -56,7 +62,8 @@ export const materialAccessWhere = async (
   return null;
 };
 
-// Admins upload for any subject; teachers for the subjects they teach
+// Admins upload for any subject; teachers for the subjects they teach.
+// The same goes for building playlists.
 export const canUploadFor = async (
   role: string | undefined,
   userId: string | null,

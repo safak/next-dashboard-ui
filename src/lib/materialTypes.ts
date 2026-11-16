@@ -6,18 +6,21 @@ export const MATERIAL_TYPES: MaterialType[] = [
   "STUDY_MATERIAL",
   "QUESTION_PAPER",
   "MEMORANDUM",
+  "PICTURE",
 ];
 
 export const materialTypeLabels: Record<MaterialType, string> = {
   STUDY_MATERIAL: "Study material",
   QUESTION_PAPER: "Question paper",
   MEMORANDUM: "Memorandum",
+  PICTURE: "Picture",
 };
 
 export const materialTypeStyles: Record<MaterialType, string> = {
   STUDY_MATERIAL: "bg-sky-100 text-sky-800",
   QUESTION_PAPER: "bg-purple-100 text-purple-800",
   MEMORANDUM: "bg-amber-100 text-amber-800",
+  PICTURE: "bg-emerald-100 text-emerald-800",
 };
 
 export const MAX_UPLOAD_MB = 25;
@@ -35,8 +38,21 @@ export const ALLOWED_FILES: Record<string, string> = {
   ".png": "image/png",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
+  ".gif": "image/gif",
   ".zip": "application/zip",
 };
+
+// Pictures must be one of these, and only these are shown in the browser
+// rather than downloaded
+export const IMAGE_FILES = [".png", ".jpg", ".jpeg", ".webp", ".gif"];
+
+export const isImageType = (mimeType: string) =>
+  IMAGE_FILES.some((ext) => ALLOWED_FILES[ext] === mimeType);
+
+// Question papers and memos belong to an exam year; other kinds don't need one
+export const yearRequired = (type: string) =>
+  type === "QUESTION_PAPER" || type === "MEMORANDUM";
 
 export const formatFileSize = (bytes: number) =>
   bytes < 1024 * 1024

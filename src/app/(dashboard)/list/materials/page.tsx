@@ -1,3 +1,4 @@
+import Image from "next/image";
 import ListControls from "@/components/ListControls";
 import MaterialDelete from "@/components/MaterialDelete";
 import MaterialUpload from "@/components/MaterialUpload";
@@ -9,6 +10,7 @@ import { resolveOrderBy, SortMap, sortOptions, toOptions } from "@/lib/listQuery
 import { canDeleteMaterial, materialAccessWhere } from "@/lib/materials";
 import {
   formatFileSize,
+  isImageType,
   MATERIAL_TYPES,
   materialTypeLabels,
   materialTypeStyles,
@@ -108,16 +110,32 @@ const MaterialListPage = async ({
   const renderRow = (item: Row) => (
     <tr key={item.id} className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight">
       <td className="p-4">
-        <div className="font-semibold">{item.title}</div>
-        {item.description && (
-          <p className="text-xs text-gray-500 max-w-[45ch] truncate">{item.description}</p>
-        )}
-        <p className="text-xs text-gray-400">
-          {item.fileName} · {formatFileSize(item.size)}
-        </p>
-        <span className={`md:hidden mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${materialTypeStyles[item.type]}`}>
-          {materialTypeLabels[item.type]}
-        </span>
+        <div className="flex items-start gap-3">
+          {isImageType(item.mimeType) && (
+            <a href={`/api/materials/${item.id}?view=1`} target="_blank" rel="noopener" title="Open full size" className="shrink-0">
+              <Image
+                src={`/api/materials/${item.id}?view=1`}
+                alt=""
+                width={64}
+                height={64}
+                unoptimized
+                className="h-16 w-16 rounded-lg object-cover border border-gray-200"
+              />
+            </a>
+          )}
+          <div>
+            <div className="font-semibold">{item.title}</div>
+            {item.description && (
+              <p className="text-xs text-gray-500 max-w-[45ch] truncate">{item.description}</p>
+            )}
+            <p className="text-xs text-gray-400">
+              {item.fileName} · {formatFileSize(item.size)}
+            </p>
+            <span className={`md:hidden mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${materialTypeStyles[item.type]}`}>
+              {materialTypeLabels[item.type]}
+            </span>
+          </div>
+        </div>
       </td>
       <td className="hidden md:table-cell">
         <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap ${materialTypeStyles[item.type]}`}>
@@ -161,7 +179,7 @@ const MaterialListPage = async ({
               ? "Materials for the subjects you registered for, in your grade."
               : role === "parent"
               ? "Materials for your children's subjects and grades."
-              : "Upload notes, question papers and memorandums for learners to download."}
+              : "Upload notes, question papers, memorandums and pictures for learners."}
           </p>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">

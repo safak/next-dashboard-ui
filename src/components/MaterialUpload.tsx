@@ -7,9 +7,11 @@ import { toast } from "react-toastify";
 import {
   ALLOWED_FILES,
   formatFileSize,
+  IMAGE_FILES,
   MATERIAL_TYPES,
   materialTypeLabels,
   MAX_UPLOAD_MB,
+  yearRequired,
 } from "@/lib/materialTypes";
 
 type Option = { id: number; name: string };
@@ -135,7 +137,7 @@ const MaterialUpload = ({ subjects, grades }: { subjects: Option[]; grades: Opti
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="m-year" className={label}>
-                    Year {type === "STUDY_MATERIAL" && <span className="text-gray-400 font-normal">(optional)</span>}
+                    Year {!yearRequired(type) && <span className="text-gray-400 font-normal">(optional)</span>}
                   </label>
                   <input
                     id="m-year"
@@ -143,7 +145,7 @@ const MaterialUpload = ({ subjects, grades }: { subjects: Option[]; grades: Opti
                     type="number"
                     min={1990}
                     max={2100}
-                    required={type !== "STUDY_MATERIAL"}
+                    required={yearRequired(type)}
                     placeholder={String(new Date().getFullYear())}
                     className="form-control"
                   />
@@ -161,12 +163,14 @@ const MaterialUpload = ({ subjects, grades }: { subjects: Option[]; grades: Opti
                     name="file"
                     type="file"
                     required
-                    accept={Object.keys(ALLOWED_FILES).join(",")}
+                    accept={(type === "PICTURE" ? IMAGE_FILES : Object.keys(ALLOWED_FILES)).join(",")}
                     onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                     className="text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-lamaSkyLight file:px-3 file:py-2 file:text-sm file:text-gray-700"
                   />
                   <p className="text-xs text-gray-400">
-                    {file ? `${file.name} · ${formatFileSize(file.size)}` : `PDF, Word, PowerPoint, Excel, images or ZIP, up to ${MAX_UPLOAD_MB} MB.`}
+                    {file ? `${file.name} · ${formatFileSize(file.size)}` : type === "PICTURE"
+                      ? `PNG, JPG, WebP or GIF, up to ${MAX_UPLOAD_MB} MB.`
+                      : `PDF, Word, PowerPoint, Excel, images or ZIP, up to ${MAX_UPLOAD_MB} MB.`}
                   </p>
                 </div>
 

@@ -417,7 +417,7 @@ export type ApproveRegistrationSchema = z.input<
 export const materialSchema = z.object({
   title: z.string().trim().min(1, { message: "Title is required!" }).max(150),
   description: z.string().trim().max(1000).optional().or(z.literal("")),
-  type: z.enum(["STUDY_MATERIAL", "QUESTION_PAPER", "MEMORANDUM"], {
+  type: z.enum(["STUDY_MATERIAL", "QUESTION_PAPER", "MEMORANDUM", "PICTURE"], {
     message: "Choose what kind of material this is!",
   }),
   subjectId: z.coerce.number().int().min(1, { message: "Subject is required!" }),
@@ -432,6 +432,23 @@ export const materialSchema = z.object({
 });
 
 export type MaterialSchema = z.input<typeof materialSchema>;
+
+// VIDEO PLAYLISTS
+
+export const playlistSchema = z.object({
+  title: z.string().trim().min(1, { message: "Give the playlist a title!" }).max(150),
+  description: z.string().trim().max(1000).optional().or(z.literal("")),
+  subjectId: z.coerce.number().int().min(1, { message: "Subject is required!" }),
+  // "" means every grade
+  gradeId: z.union([z.literal(""), z.coerce.number().int().min(1)]).optional(),
+});
+
+export const playlistVideoSchema = z.object({
+  playlistId: z.coerce.number().int().min(1),
+  url: z.string().trim().min(1, { message: "Paste a YouTube link!" }).max(500),
+  // Optional: the title is looked up on YouTube when left empty
+  title: z.string().trim().max(150).optional().or(z.literal("")),
+});
 
 // FEES (amounts arrive as text like "450" or "450.50" and become cents)
 
