@@ -1,4 +1,6 @@
 import { auth } from "@/lib/auth";
+import prisma from "@/lib/prisma";
+import Link from "next/link";
 import MenuLink from "./MenuLink";
 import MenuLogout from "./MenuLogout";
 
@@ -103,6 +105,12 @@ const menuItems = [
         visible: ["admin", "teacher", "student", "parent"],
       },
       {
+        icon: "/view.png",
+        label: "Videos",
+        href: "/list/videos",
+        visible: ["admin", "teacher", "student", "parent"],
+      },
+      {
         icon: "/calendar.png",
         label: "Events",
         href: "/list/events",
@@ -148,8 +156,21 @@ const menuItems = [
 ];
 
 const Menu = async () => {
-  const role = (await auth()).role ?? "";
+  const { userId, role: authRole } = await auth();
+  const role = authRole ?? "";
   const homeHref = role ? `/${role}` : "/";
+  // Until a school-set password is replaced, every page except the profile
+  // redirects there, so the other links are shown as locked instead
+  const locked = !!(
+    userId &&
+    (await prisma.user.findUnique({ where: { id: userId }, select: { mustChangePassword: true } }))
+      ?.mustChangePassword
+  );
+  // People without an email who asked for their password to be reset
+  const resetRequests =
+    role === "admin" && !locked
+      ? await prisma.passwordResetRequest.count({ where: { handledAt: null } })
+      : 0;
 
   const getHref = (href: string) => {
     if (href === "home") return homeHref;
@@ -158,6 +179,19 @@ const Menu = async () => {
 
   return (
     <nav className="mt-4 text-sm pb-6">
+      {locked && (
+        <p className="hidden lg:block mx-1 mt-2 rounded-lg bg-lamaYellowLight px-3 py-2 text-xs text-gray-700">
+          Change your password on the Profile page to unlock the menu.
+        </p>
+      )}
+      {resetRequests > 0 && (
+        <Link
+          href="/settings#password-requests"
+          className="hidden lg:block mx-1 mt-2 rounded-lg bg-lamaYellowLight px-3 py-2 text-xs text-gray-700 hover:brightness-95"
+        >
+          {resetRequests} password reset request{resetRequests === 1 ? "" : "s"} waiting →
+        </Link>
+      )}
       {menuItems.map((section) => (
         <div className="flex flex-col gap-1" key={section.title}>
           <span className="hidden lg:block px-3 mt-4 mb-2 text-[11px] font-semibold tracking-wider text-gray-400">
@@ -178,6 +212,7 @@ const Menu = async () => {
                 href={getHref(item.href)}
                 icon={item.icon}
                 label={item.label}
+                disabled={locked && item.href !== "/profile"}
               />
             );
           })}

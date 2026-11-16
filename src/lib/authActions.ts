@@ -1,8 +1,19 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { getAccountEmail } from "./accountEmail";
 import { auth, createSession, deleteSession } from "./auth";
+import { emailConfigured } from "./email";
+import {
+  checkEmailCode,
+  CODE_COOKIE,
+  CODE_MINUTES,
+  createEmailCode,
+  pendingSignIn,
+  resendEmailCode,
+} from "./emailCodes";
 import prisma from "./prisma";
 import {
   blockedFor,
@@ -58,8 +69,77 @@ export const signIn = async (
   }
 
   clearAttempts(accountKey);
+
+  // Two-step sign-in: the password was right, now prove access to the email
+  if (user.twoFactorEnabled) {
+    const email = await getAccountEmail(user.id, user.role);
+    if (!email || !emailConfigured()) {
+      return {
+        error:
+          "Your account needs a sign-in code, but it can't be emailed right now. Contact the school office.",
+      };
+    }
+    let codeId: string;
+    try {
+      codeId = await createEmailCode(user.id, "LOGIN", email);
+    } catch (err) {
+      console.log(err);
+      return { error: "The sign-in code couldn't be emailed. Please try again in a moment." };
+    }
+    (await cookies()).set(CODE_COOKIE, codeId, {
+      httpOnly: true,
+      secure: (await headers()).get("x-forwarded-proto") === "https",
+      sameSite: "lax",
+      path: "/",
+      maxAge: CODE_MINUTES * 60 * 4,
+    });
+    redirect("/sign-in/verify");
+  }
+
+  await finishSignIn(user);
+  return {};
+};
+
+const finishSignIn = async (user: { id: string; role: string; mustChangePassword: boolean }) => {
   await createSession(user.id, user.role, user.mustChangePassword);
   redirect(user.mustChangePassword ? "/profile" : `/${user.role}`);
+};
+
+export const verifySignInCode = async (
+  _state: AuthFormState,
+  formData: FormData
+): Promise<AuthFormState> => {
+  const ipKey = `signin-code:ip:${await clientIp()}`;
+  const wait = blockedFor(ipKey, IP_LIMIT);
+  if (wait) return { error: waitMessage("wrong codes", wait) };
+
+  const row = await pendingSignIn();
+  if (!row) return { error: "This sign-in has expired. Go back and sign in again." };
+
+  const problem = await checkEmailCode(row, String(formData.get("code") ?? ""));
+  if (problem) {
+    recordAttempt(ipKey, WINDOW_MINUTES);
+    return { error: problem };
+  }
+
+  await prisma.emailCode.delete({ where: { id: row.id } });
+  (await cookies()).delete(CODE_COOKIE);
+  const user = await prisma.user.findUnique({ where: { id: row.userId } });
+  if (!user) return { error: "This account no longer exists." };
+  await finishSignIn(user);
+  return {};
+};
+
+export const resendSignInCode = async (): Promise<AuthFormState> => {
+  const row = await pendingSignIn();
+  if (!row) return { error: "This sign-in has expired. Go back and sign in again." };
+  try {
+    const problem = await resendEmailCode(row);
+    return problem ? { error: problem } : { success: true };
+  } catch (err) {
+    console.log(err);
+    return { error: "The code couldn't be emailed. Please try again in a moment." };
+  }
 };
 
 export const signOut = async () => {

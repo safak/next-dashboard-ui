@@ -1,5 +1,8 @@
 import ChangePasswordForm from "@/components/forms/ChangePasswordForm";
+import TwoFactorSettings from "@/components/forms/TwoFactorSettings";
+import { getAccountEmail } from "@/lib/accountEmail";
 import { auth, getDisplayName } from "@/lib/auth";
+import { emailConfigured } from "@/lib/email";
 import prisma from "@/lib/prisma";
 
 const ProfilePage = async () => {
@@ -7,12 +10,14 @@ const ProfilePage = async () => {
     auth(),
     getDisplayName(),
   ]);
-  const mustChange = !!(
-    await prisma.user.findUnique({
+  const [account, email] = await Promise.all([
+    prisma.user.findUnique({
       where: { id: userId! },
-      select: { mustChangePassword: true },
-    })
-  )?.mustChangePassword;
+      select: { mustChangePassword: true, twoFactorEnabled: true },
+    }),
+    getAccountEmail(userId!, role!),
+  ]);
+  const mustChange = !!account?.mustChangePassword;
 
   return (
     <div className="p-4 flex flex-col gap-4">
@@ -37,6 +42,21 @@ const ProfilePage = async () => {
         )}
         <ChangePasswordForm />
       </div>
+      {!mustChange && (
+        <div className="card p-6">
+          <h2 className="text-lg font-semibold">Email and two-step sign-in</h2>
+          <p className="text-sm text-gray-500 mb-4 max-w-2xl">
+            Your email address is where password reset links go. With two-step sign-in on,
+            you also enter a code we email you each time you sign in, so a stolen password
+            alone isn&apos;t enough to get into your account.
+          </p>
+          <TwoFactorSettings
+            email={email}
+            enabled={!!account?.twoFactorEnabled}
+            emailReady={emailConfigured()}
+          />
+        </div>
+      )}
     </div>
   );
 };

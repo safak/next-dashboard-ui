@@ -7,7 +7,11 @@ import { redirect } from "next/navigation";
 
 export const metadata = { title: "Sign in" };
 
-const LoginPage = async () => {
+const LoginPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ reset?: string }>;
+}) => {
   const { role } = await auth();
   if (role) redirect(`/${role}`);
   // A brand-new installation has no accounts yet
@@ -17,7 +21,11 @@ const LoginPage = async () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-lamaSkyLight p-4">
-      <SignInForm schoolName={settings.schoolName} logoUrl={siteContent(settings).logoUrl} />
+      <SignInForm
+        schoolName={settings.schoolName}
+        logoUrl={siteContent(settings).logoUrl}
+        passwordReset={(await searchParams).reset === "1"}
+      />
       <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
         ← Back to the website
       </Link>

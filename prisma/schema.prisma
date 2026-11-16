@@ -22,11 +22,65 @@ model User {
   // Sessions issued before this are rejected, so changing a password signs
   // out every other device
   passwordChangedAt  DateTime @default(now())
+  // When on, signing in also needs a code sent to the account's email
+  twoFactorEnabled   Boolean  @default(false)
+  resetTokens        PasswordResetToken[]
+  emailCodes         EmailCode[]
+  resetRequests      PasswordResetRequest[]
 }
 
 model Admin {
-  id       String @id @default(cuid())
-  username String @unique
+  id       String  @id @default(cuid())
+  username String  @unique
+  // For password reset links and sign-in codes
+  email    String? @unique
+}
+
+// FORGOT PASSWORD AND TWO-STEP SIGN-IN. Only hashes of the secrets are
+// stored, so a copy of the database can't be used to take over accounts.
+
+// A one-time link emailed to reset a forgotten password
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// A 6-digit code emailed to finish signing in (LOGIN) or to confirm the
+// address when switching two-step sign-in on (ENABLE). The id is kept in
+// a cookie on the device that asked for it.
+model EmailCode {
+  id        String   @id
+  userId    String
+  purpose   String
+  email     String
+  codeHash  String
+  attempts  Int      @default(0)
+  sends     Int      @default(1)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// "Forgot password" from an account with no email address: the admins
+// reset it by hand and get in touch
+model PasswordResetRequest {
+  id        Int       @id @default(autoincrement())
+  userId    String
+  contact   String?
+  createdAt DateTime  @default(now())
+  handledAt DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([handledAt])
 }
 
 model Student {
@@ -99,6 +153,7 @@ model Grade {
   students      Student[]
   registrations StudentRegistration[]
   materials     Material[]
+  playlists     Playlist[]
 }
 
 model Class {
@@ -127,6 +182,7 @@ model Subject {
   delivery      DeliveryMode          @default(BOTH)
   materials     Material[]
   feeRates      FeeRate[]
+  playlists     Playlist[]
 }
 
 model Lesson {
@@ -407,6 +463,7 @@ enum MaterialType {
   STUDY_MATERIAL
   QUESTION_PAPER
   MEMORANDUM
+  PICTURE
 }
 
 // An uploaded file learners can download. The file itself lives in the
@@ -430,6 +487,37 @@ model Material {
   grade        Grade?       @relation(fields: [gradeId], references: [id])
 
   @@index([subjectId])
+}
+
+// VIDEO PLAYLISTS of YouTube lessons, built by admins and teachers and
+// shown to learners with the same subject and grade rules as materials
+
+model Playlist {
+  id          Int             @id @default(autoincrement())
+  title       String
+  description String?
+  subjectId   Int
+  // Empty means the playlist is for every grade
+  gradeId     Int?
+  createdById String
+  createdAt   DateTime        @default(now())
+  subject     Subject         @relation(fields: [subjectId], references: [id])
+  grade       Grade?          @relation(fields: [gradeId], references: [id])
+  videos      PlaylistVideo[]
+
+  @@index([subjectId])
+}
+
+model PlaylistVideo {
+  id         Int      @id @default(autoincrement())
+  playlistId Int
+  youtubeId  String
+  title      String
+  position   Int
+  createdAt  DateTime @default(now())
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+
+  @@index([playlistId, position])
 }
 
 // FEES. All amounts are in cents (R450.00 = 45000) to avoid rounding errors.

@@ -3,7 +3,9 @@
 import bcrypt from "bcryptjs";
 import { randomInt } from "crypto";
 import { revalidatePath } from "next/cache";
+import { EMAIL_PATTERN } from "./accountEmail";
 import { auth } from "./auth";
+import { emailConfigured, sendEmail } from "./email";
 import {
   studentSubjectsSchema,
   StudentSubjectsSchema,
@@ -93,18 +95,64 @@ export const resetPassword = async (
   }
 
   const password = temporaryPassword();
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      password: await bcrypt.hash(password, 10),
-      mustChangePassword: true,
-      passwordChangedAt: new Date(),
-    },
-  });
+  const now = new Date();
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: await bcrypt.hash(password, 10),
+        mustChangePassword: true,
+        passwordChangedAt: now,
+        // Often they've lost access to their email too, which is where
+        // sign-in codes go; they can switch it back on from their profile
+        twoFactorEnabled: false,
+      },
+    }),
+    prisma.passwordResetRequest.updateMany({
+      where: { userId: user.id, handledAt: null },
+      data: { handledAt: now },
+    }),
+  ]);
   // A locked-out user usually calls the school; let them straight back in
   clearAttempts(`signin:user:${username.toLowerCase()}`);
+  revalidatePath("/settings");
 
   return { success: true, error: false, username: user.username, temporaryPassword: password };
+};
+
+// A "forgot password" request the admin dealt with some other way
+export const dismissResetRequest = async (_state: State, formData: FormData): Promise<State> => {
+  if (!(await isAdmin())) return NOT_ALLOWED;
+  const id = parseInt(String(formData.get("id")));
+  await prisma.passwordResetRequest.updateMany({
+    where: { id, handledAt: null },
+    data: { handledAt: new Date() },
+  });
+  revalidatePath("/settings");
+  return { success: true, error: false };
+};
+
+export const sendTestEmail = async (_state: State, formData: FormData): Promise<State> => {
+  if (!(await isAdmin())) return NOT_ALLOWED;
+  const to = String(formData.get("to") ?? "").trim();
+  if (!EMAIL_PATTERN.test(to)) return { success: false, error: true, message: "Enter a valid email address." };
+  if (!emailConfigured()) {
+    return { success: false, error: true, message: "Email isn't set up yet: add the SMTP settings to .env first." };
+  }
+  try {
+    await sendEmail({
+      to,
+      subject: "Test email from your school system",
+      text: "Email is working. Password reset links and sign-in codes can now be sent.",
+    });
+  } catch (err) {
+    return {
+      success: false,
+      error: true,
+      message: `Sending failed: ${err instanceof Error ? err.message : String(err)}`.slice(0, 300),
+    };
+  }
+  return { success: true, error: false, message: `Test email sent to ${to}.` };
 };
 
 // GRADES: a new school needs these before classes and registrations work
@@ -129,7 +177,7 @@ export const deleteGrade = async (_state: State, formData: FormData): Promise<St
   const grade = await prisma.grade.findUnique({
     where: { id },
     include: {
-      _count: { select: { classes: true, students: true, registrations: true, materials: true } },
+      _count: { select: { classes: true, students: true, registrations: true, materials: true, playlists: true } },
     },
   });
   if (!grade) return { success: false, error: true, message: "That grade no longer exists." };
@@ -138,7 +186,7 @@ export const deleteGrade = async (_state: State, formData: FormData): Promise<St
     return {
       success: false,
       error: true,
-      message: `Grade ${grade.level} still has classes, learners, registrations or materials.`,
+      message: `Grade ${grade.level} still has classes, learners, registrations, materials or playlists.`,
     };
   }
   await prisma.grade.delete({ where: { id } });

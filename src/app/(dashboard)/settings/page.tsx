@@ -10,11 +10,41 @@ import GradesManager from "@/components/GradesManager";
 import { LogoUpload, WebsiteSettingsForm } from "@/components/forms/WebsiteSettingsForm";
 import { siteContent, DEFAULT_SETTINGS } from "@/lib/schoolSettings";
 import prisma from "@/lib/prisma";
+import { ResetRequests, TestEmailForm, type ResetRequestRow } from "@/components/AccountRecoveryAdmin";
+import { emailConfigured } from "@/lib/email";
+
+// Open "forgot password" requests, with the person's name and phone on file
+const openResetRequests = async (): Promise<ResetRequestRow[]> => {
+  const requests = await prisma.passwordResetRequest.findMany({
+    where: { handledAt: null },
+    include: { user: { select: { id: true, username: true, role: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+  const ids = { where: { id: { in: requests.map((r) => r.userId) } }, select: { id: true, name: true, surname: true, phone: true } };
+  const people = new Map(
+    (await Promise.all([prisma.teacher.findMany(ids), prisma.student.findMany(ids), prisma.parent.findMany(ids)]))
+      .flat()
+      .map((p) => [p.id, p])
+  );
+  return requests.map((r) => {
+    const person = people.get(r.userId);
+    return {
+      id: r.id,
+      username: r.user.username,
+      role: r.user.role,
+      name: person ? `${person.name} ${person.surname}` : r.user.username,
+      contact: r.contact,
+      phone: person?.phone ?? null,
+      requestedAt: new Intl.DateTimeFormat("en-ZA", { dateStyle: "medium", timeStyle: "short" }).format(r.createdAt),
+    };
+  });
+};
 
 const SettingsPage = async () => {
   const { role } = await auth();
   const settings = await getSettings();
   const builtIn = siteContent({ ...settings, ...DEFAULT_SETTINGS, schoolName: settings.schoolName });
+  const resetRequests = role === "admin" ? await openResetRequests() : [];
   const grades =
     role === "admin"
       ? await prisma.grade.findMany({
@@ -103,13 +133,35 @@ const SettingsPage = async () => {
       )}
       {role === "admin" && (
         <div className="card p-6">
-          <h1 className="text-lg font-semibold">Reset a password</h1>
+          <h1 id="password-requests" className="text-lg font-semibold scroll-mt-4">Reset a password</h1>
           <p className="text-sm text-gray-500 mb-4">
             For anyone who forgot their password, including other admins. You
             get a temporary password to give them; they choose their own when
-            they next sign in. This also lifts a sign-in lockout.
+            they next sign in. This also lifts a sign-in lockout and switches
+            off two-step sign-in, in case they lost access to their email.
+            People without an email address who use &quot;Forgot password&quot;
+            are listed here.
           </p>
+          <ResetRequests requests={resetRequests} />
           <ResetPasswordForm />
+        </div>
+      )}
+      {role === "admin" && (
+        <div id="email" className="card p-6 scroll-mt-4">
+          <h1 className="text-lg font-semibold">Email</h1>
+          <p className="text-sm text-gray-500 mb-4">
+            Needed for password reset links and two-step sign-in codes.{" "}
+            {emailConfigured() ? (
+              <span className="inline-flex items-center gap-1.5 font-medium text-green-700">
+                <span className="h-2 w-2 rounded-full bg-green-500" /> Set up
+              </span>
+            ) : (
+              <span className="font-medium text-amber-700">
+                Not set up yet: add the SMTP settings to .env (see docs/email-setup.md) and restart the app.
+              </span>
+            )}
+          </p>
+          <TestEmailForm />
         </div>
       )}
       {role === "admin" && (
